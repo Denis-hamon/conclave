@@ -48,21 +48,78 @@ Record it yourself — see [`examples/DEMO_RECORDING.md`](examples/DEMO_RECORDIN
 
 ---
 
-## Why Conclave
+## Why this project exists
 
-Anthropic built the managed agent.  
-**Conclave builds the org chart.**
+Multi-agent frameworks today model **tasks** or **graphs**. Real organizations
+don't work that way. They work through **roles** that hold persistent
+accountability, deliberate together, and leave an audit trail. Conclave is the
+attempt to make that the primitive — not the workaround.
 
-| | LangGraph / CrewAI | Conclave |
-|---|---|---|
-| Agent primitive | Task / Role | **Organizational role** |
-| Coordination | DAG or fixed sequence | **Dynamic deliberation** |
-| Memory | Per-run context | **Persistent per-role memory** |
-| Infrastructure | You manage | **Managed Agents native** |
-| Audit | Optional | **Decision Trail, always on** |
-| Config | Python code | **YAML org definition** |
+Three concrete problems it solves:
 
-Conclave is the reference implementation of **org-native multi-agent coordination** — the pattern Anthropic has signaled as the next frontier of Managed Agents, made concrete today.
+1. **Token cost blows up with persistent agents.** A role whose history grows
+   with every turn becomes a Sonnet-sized bill even for trivial work. Conclave
+   routes each task through a classifier: repetitive work goes to a Haiku
+   self-correction loop, novel work goes to Sonnet. Typical savings: 60–80%.
+2. **Coordination has no audit layer.** Who decided what, when, and why?
+   Conclave writes every inter-agent message to a JSONL Decision Trail —
+   replayable, diffable, postmortem-ready.
+3. **Org structure lives in code, not config.** Defining a company in Python
+   is a liability. Conclave uses a YAML org chart any non-engineer can read,
+   amend, and ship.
+
+## Why the name
+
+*Conclave* — from Latin ***cum clave***, "locked with a key." Historically the
+gathering where cardinals deliberate behind closed doors until a decision
+emerges. The metaphor fits: a small group of specialists, each with a
+persistent role, working through a structured deliberation until a concrete
+output is produced.
+
+It also signals the opposite of the dominant agent-framework aesthetic:
+not a graph, not a pipeline, not a swarm — a **bureau**.
+
+## Why it makes sense next to market solutions
+
+| | LangGraph | CrewAI | AutoGen | **Conclave** |
+|---|---|---|---|---|
+| Agent primitive | Node in a graph | Task worker | Chat participant | **Organizational role** |
+| Coordination | Explicit DAG | Linear pipeline | Free-form chat | **Deliberation mode (hierarchy / consensus / first-valid)** |
+| Memory | Checkpointer | Per-task | Per-conversation | **Persistent per-role, structured inbox/outbox** |
+| Cost control | Manual | Manual | Manual | **Router: Haiku loop vs Sonnet, per-task decision** |
+| Audit | Optional traces | Logs | Chat history | **Decision Trail, always on, JSONL-replayable** |
+| Config surface | Python graph | Python + YAML | Python | **YAML-first, readable by non-engineers** |
+| Production story | Build your own | Build your own | Build your own | **Certification pipeline + dashboard + benchmark** |
+
+**What none of them ship:** org-level primitives (reporting lines,
+accountability, escalation paths), cost routing built into the framework, or
+a retroactive certification loop that promotes routine tasks to cheaper
+models once they're proven.
+
+## Why it makes sense next to Anthropic's offering
+
+Anthropic ships the **agent primitive** (Managed Agents, Claude Code, MCP).
+It explicitly does not ship the **organizational layer** — reporting chains,
+deliberation strategies, multi-role coordination. Third-party frameworks have
+rushed in, but most ignore Anthropic's native primitives and rebuild a
+parallel stack.
+
+Conclave's bet is the opposite: **be the org layer directly on top of
+Anthropic's primitives**, so the two grow together rather than diverge.
+
+| Anthropic primitive | How Conclave uses it |
+|---|---|
+| Managed Agents (beta) | Each `ConclaveAgent` maps 1:1 to a Managed Agent session. The backend is abstracted so the swap is one file when GA ships. |
+| MCP | Each entry in an agent's `tools:` list binds to an MCP server. No custom tool protocol. |
+| Model tiering (Haiku / Sonnet / Opus) | The whole framework is designed around it: classifier on Haiku, deliberation on Sonnet, escalation on Opus. The certification pipeline produces evidence of when Haiku is production-viable. |
+| Claude Code | `/conclave` slash command brings the full pipeline into Claude Code sessions. |
+
+For Anthropic specifically, Conclave is useful as a **reference
+implementation**: it demonstrates what developers will build on top of
+Managed Agents once multi-session coordination is native — and it validates
+the tiered-model strategy with concrete cost/quality numbers (see
+[`benchmarks/results.json`](benchmarks/results.json) and
+[`ANTHROPIC.md`](ANTHROPIC.md)).
 
 ---
 
