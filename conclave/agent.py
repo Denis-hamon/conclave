@@ -100,6 +100,7 @@ class ConclaveAgent:
         client:        anthropic.Anthropic,
         executor:      str = "native",
         force_model:   Optional[str] = None,
+        backend:       str = "anthropic",
     ):
         self.role        = role
         self.persona     = persona
@@ -111,6 +112,9 @@ class ConclaveAgent:
         self.client      = client
         self.cost_meter  = CostMeter()
         self._router     = TaskRouter(client)
+        self.backend_name = backend
+        self._backend   = None
+        self._session_id = None
 
         self._system = SYSTEM_TEMPLATE.format(
             role=role,
@@ -150,15 +154,24 @@ class ConclaveAgent:
         response.tokens_saved = tokens_saved
         return response
 
+    def _ensure_backend(self, model: str):
+        if self._backend is None:
+            from .backends import get_backend
+            self._backend = get_backend(self.backend_name, client=self.client)
+            self._session_id = self._backend.create_session(self.role, self._system, model)
+        return self._backend
+
     def _run_sonnet(self, decision) -> tuple[str, int, float]:
-        resp = self.client.messages.create(
-            model=decision.model.value,
-            max_tokens=1024,
-            system=self._system,
+        backend = self._ensure_backend(decision.model.value)
+        resp = backend.send(
+            session_id=self._session_id,
             messages=self.history,
+            model=decision.model.value,
+            system=self._system,
+            max_tokens=1024,
         )
-        self.cost_meter.record(decision.model, resp.usage.input_tokens, resp.usage.output_tokens)
-        return resp.content[0].text, 1, 0.0
+        self.cost_meter.record(decision.model, resp.input_tokens, resp.output_tokens)
+        return resp.text, 1, 0.0
 
     def _run_haiku_loop(self, task: str, decision) -> tuple[str, int, float]:
         loop   = HaikuCorrectionLoop(self.client, decision, self.role)

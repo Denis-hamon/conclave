@@ -31,6 +31,7 @@ def load_org(path: str | Path, client: anthropic.Anthropic) -> tuple[dict[str, C
 
     org_name = org.get("name", "Conclave Org")
     deliberation = org.get("deliberation", "hierarchy")
+    org_backend = org.get("backend", "anthropic")
     agents_cfg = org["agents"]
     org_structure = _build_org_structure(agents_cfg)
 
@@ -54,6 +55,7 @@ def load_org(path: str | Path, client: anthropic.Anthropic) -> tuple[dict[str, C
             client=client,
             executor=a.get("executor", "native"),
             force_model=a.get("force_model", None),
+            backend=a.get("backend", org_backend),
         )
 
     if not entry_role:

@@ -1,4 +1,19 @@
-# Recording the demo GIF
+# Recording the demo
+
+Two options: a **static SVG screenshot** (no external tooling, default) or an
+**animated GIF** (recommended for richer marketing, needs `vhs`).
+
+## Static SVG (always works)
+
+```bash
+python examples/render_demo.py
+# → writes examples/demo.svg
+```
+
+This uses `rich.Console(record=True).save_svg()` so it has zero system
+dependencies beyond the main package. GitHub renders SVG inline in README.
+
+## Animated GIF
 
 The demo (`examples/demo.py`) is designed for terminal recording. It paces
 output with `time.sleep(0.35)` between agent turns so it reads well at real-time
