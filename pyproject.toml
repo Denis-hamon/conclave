@@ -26,6 +26,19 @@ dependencies = [
     "rich>=13.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-mock>=3.12",
+    "respx>=0.20",
+]
+dashboard = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "watchfiles>=0.21",
+]
+
 [project.scripts]
 conclave = "conclave.cli:cli"
 

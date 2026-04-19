@@ -42,14 +42,26 @@ def cli():
 @click.option("--deliberation", default=None)
 @click.option("--max-turns",    default=20, show_default=True)
 @click.option("--trail-dir",    default=".conclave",    show_default=True)
-def run(goal, org, deliberation, max_turns, trail_dir):
+@click.option("--dry-run",      is_flag=True, default=False,
+              help="Simulate deliberation with no API calls.")
+def run(goal, org, deliberation, max_turns, trail_dir, dry_run):
     """Run a goal through the org and produce a Decision Trail."""
     from .org import load_org
     from .bus import Conclavebus
 
-    client = _client()
+    if dry_run:
+        from .dry_run import DryRunClient
+        client = DryRunClient()
+        console.print("[bold yellow]⚠ [DRY RUN — no API calls made][/bold yellow]")
+    else:
+        client = _client()
     agents, org_name, default_delib, entry_role = load_org(org, client)
-    trail_path = Path(trail_dir) / f"trail_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
+    if dry_run:
+        # Force native executor so DeepAgents is bypassed in simulation mode.
+        for a in agents.values():
+            a.executor = "native"
+    prefix = "dry_run_trail" if dry_run else "trail"
+    trail_path = Path(trail_dir) / f"{prefix}_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
 
     Conclavebus(
         agents=agents,
@@ -366,6 +378,98 @@ def _creative_agency():
       reports_to: CreativeDirector
       tools: [notion, slack]
 """
+
+
+# ─── BENCHMARK ────────────────────────────────────────────────────────────────
+
+@cli.command()
+@click.option("--dry-run", is_flag=True, default=False, help="Run with zero API calls.")
+@click.option("--output",  default="benchmarks/results.json", show_default=True)
+def benchmark(dry_run, output):
+    """Benchmark Conclave routing vs all-Haiku and all-Sonnet over 20 tasks."""
+    from .benchmark import ConclaveBenchmark
+    from .benchmark_tasks import BENCHMARK_CATEGORIES
+
+    if dry_run:
+        from .dry_run import DryRunClient
+        client = DryRunClient()
+        console.print("[yellow]⚠ [DRY RUN — no API calls made][/yellow]")
+    else:
+        client = _client()
+
+    bench = ConclaveBenchmark(client=client, dry_run=dry_run)
+    report = bench.run()
+    bench.save(Path(output), report)
+
+    s = report["summary"]
+    t = Table(show_header=True, header_style="bold cyan")
+    t.add_column("Category")
+    t.add_column("Haiku",    justify="right")
+    t.add_column("Sonnet",   justify="right")
+    t.add_column("Conclave", justify="right")
+    t.add_column("Quality",  justify="right")
+    for cat in BENCHMARK_CATEGORIES:
+        row = report["by_category"][cat]
+        q = (row["quality"] / row["n"] * 100) if row["n"] else 0.0
+        t.add_row(
+            cat,
+            f"${row['haiku_only']:.3f}",
+            f"${row['sonnet_only']:.3f}",
+            f"${row['conclave']:.3f}",
+            f"{q:.0f}%",
+        )
+    t.add_row(
+        "[bold]TOTAL[/bold]",
+        f"[bold]${s['haiku_only_cost']:.3f}[/bold]",
+        f"[bold]${s['sonnet_only_cost']:.3f}[/bold]",
+        f"[bold]${s['conclave_cost']:.3f}[/bold]",
+        f"[bold]{s['conclave_quality_vs_sonnet_pct']:.0f}%[/bold]",
+    )
+
+    console.print()
+    console.print(t)
+    console.print()
+    console.print(
+        f"[green]Conclave saves {s['conclave_saving_vs_sonnet_pct']:.1f}% vs all-Sonnet "
+        f"at {s['conclave_quality_vs_sonnet_pct']:.1f}% quality parity.[/green]"
+    )
+    console.print(f"[dim]Results written to {output}[/dim]")
+
+
+# ─── DASHBOARD ────────────────────────────────────────────────────────────────
+
+@cli.command()
+@click.option("--org",       default="conclave.yml", show_default=True)
+@click.option("--trail-dir", default=".conclave",    show_default=True)
+@click.option("--port",      default=7777,           show_default=True)
+@click.option("--host",      default="127.0.0.1",    show_default=True)
+@click.option("--no-open",   is_flag=True, default=False,
+              help="Do not auto-open the browser.")
+def dashboard(org, trail_dir, port, host, no_open):
+    """Launch the Conclave dashboard at http://localhost:{port}"""
+    import webbrowser
+    try:
+        import uvicorn
+    except ImportError:
+        raise click.ClickException(
+            "Dashboard requires extras. Install with: pip install 'conclave-agents[dashboard]'"
+        )
+
+    from .dashboard.server import create_app
+
+    org_path = Path(org)
+    trail_path = Path(trail_dir)
+    app = create_app(org_path=org_path, trail_dir=trail_path)
+
+    url = f"http://{host}:{port}"
+    console.print(f"[bold cyan]◆ Conclave Dashboard → {url}[/bold cyan]")
+    if not no_open:
+        try:
+            webbrowser.open(url)
+        except Exception:
+            pass
+
+    uvicorn.run(app, host=host, port=port, log_level="warning")
 
 
 if __name__ == "__main__":

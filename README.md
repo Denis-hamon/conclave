@@ -1,14 +1,36 @@
 # Conclave
 
+![Tests](https://github.com/Denis-hamon/conclave/actions/workflows/test.yml/badge.svg)
+![PyPI](https://img.shields.io/pypi/v/conclave-agents)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Built on Claude](https://img.shields.io/badge/built%20on-Claude%20Managed%20Agents-orange)
+
 > *A bureau of Claude agents that deliberates, decides, and delivers.*
 
-**Conclave** is an open-source multi-agent framework built natively on [Anthropic Managed Agents](https://docs.anthropic.com/managed-agents).  
+**Conclave** is an open-source multi-agent framework built natively on [Anthropic Managed Agents](https://docs.anthropic.com/managed-agents).
 Define your organization in YAML. Give it a goal. Watch your agents deliberate.
+
+> 🎬 [Watch the demo](#demo) · ⭐ Star to follow development · 📖 [ANTHROPIC.md](ANTHROPIC.md)
+
+## Quickstart
 
 ```bash
 pip install conclave-agents
-conclave run "Launch a new checkout API" --org examples/product_squad.yml
+conclave init --template product-squad
+conclave run "Your goal here" --dry-run   # no API key needed
+export ANTHROPIC_API_KEY=sk-ant-...
+conclave run "Your goal here"
 ```
+
+## Demo
+
+![Conclave demo](examples/demo.gif)
+
+*Product Squad deliberating on a checkout API spec. 3 agents, 8 turns, ~70% cheaper than all-Sonnet.*
+
+Record it yourself — see [`examples/DEMO_RECORDING.md`](examples/DEMO_RECORDING.md).
+
+---
 
 ```
 ◆ Conclave · product_squad · 3 agents
