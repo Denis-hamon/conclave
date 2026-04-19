@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Conclave · The organizational layer for Claude Managed Agents</title>
+  <meta name="description" content="An open-source framework that brings roles, deliberation, and auditability to Claude Managed Agents. Built on Anthropic primitives — Managed Agents, MCP, model tiering." />
+  <meta property="og:title" content="Conclave · The organizational layer for Claude Managed Agents" />
+  <meta property="og:description" content="Roles, deliberation, Decision Trail, and token-aware routing on top of Claude." />
+  <meta property="og:type" content="article" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:          #f7f4ef;
+      --surface:     #ffffff;
+      --surface-2:   #efe9df;
+      --ink:         #191817;
+      --ink-dim:     #6b6762;
+      --rule:        #e8e2d5;
+      --accent:      #cc785c;
+      --accent-ink:  #a15840;
+      --code-bg:     #1a1816;
+      --code-ink:    #e8e2d5;
+      --maxw:        1120px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+    a:hover { border-bottom-color: var(--accent); color: var(--accent-ink); }
+    h1, h2, h3, h4 {
+      font-family: 'Fraunces', 'Times New Roman', serif;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    /* ---------- Nav ---------- */
+    .nav {
+      border-bottom: 1px solid var(--rule);
+      background: var(--bg);
+      position: sticky; top: 0; z-index: 40;
+      backdrop-filter: blur(10px);
+    }
+    .nav-inner {
+      max-width: var(--maxw); margin: 0 auto; padding: 20px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 14px;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500;
+      border-bottom: none;
+    }
+    .brand-mark {
+      width: 22px; height: 22px; border-radius: 5px;
+      background: linear-gradient(135deg, var(--accent) 0%, #b8553a 100%);
+      display: inline-block;
+      position: relative;
+    }
+    .brand-mark::after {
+      content: ""; position: absolute; inset: 4px; border-radius: 2px;
+      background: var(--bg); opacity: .85;
+    }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { border-bottom: none; color: var(--ink-dim); }
+    .nav-links a:hover { color: var(--accent-ink); }
+    .pill {
+      border: 1px solid var(--rule); border-radius: 999px;
+      padding: 6px 14px; font-size: 13px; color: var(--ink);
+    }
+    .pill:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+    /* ---------- Hero ---------- */
+    .container { max-width: var(--maxw); margin: 0 auto; padding: 0 32px; }
+    .hero { padding: 84px 0 64px; }
+    .eyebrow {
+      font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--accent-ink); font-weight: 500; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(44px, 6.2vw, 82px);
+      max-width: 18ch;
+      margin-bottom: 28px;
+    }
+    .hero .lede {
+      font-size: 22px; line-height: 1.45; color: var(--ink-dim);
+      max-width: 52ch; margin-bottom: 40px;
+      font-family: 'Fraunces', serif; font-weight: 400;
+    }
+    .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px; border-radius: 999px;
+      font-size: 15px; font-weight: 500;
+      border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+      transition: background .15s ease, color .15s ease;
+    }
+    .btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.ghost { background: transparent; color: var(--ink); }
+    .btn.ghost:hover { background: var(--ink); color: var(--bg); }
+    .btn svg { width: 16px; height: 16px; }
+
+    /* ---------- Byline / meta ---------- */
+    .byline {
+      display: flex; gap: 24px; align-items: center;
+      margin-top: 48px; padding-top: 28px;
+      border-top: 1px solid var(--rule);
+      font-size: 14px; color: var(--ink-dim);
+    }
+    .byline .sep::before { content: "·"; margin: 0 10px; }
+
+    /* ---------- Sections ---------- */
+    section { padding: 72px 0; border-top: 1px solid var(--rule); }
+    section h2 {
+      font-size: clamp(32px, 3.8vw, 48px);
+      max-width: 22ch;
+      margin-bottom: 24px;
+    }
+    section .intro {
+      font-size: 19px; color: var(--ink-dim); max-width: 64ch;
+      margin-bottom: 44px;
+    }
+
+    /* Two-column */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; gap: 40px; } }
+
+    /* 3-up feature grid */
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    @media (max-width: 900px) { .feat-grid { grid-template-columns: 1fr; } }
+    .feat {
+      padding: 32px 28px; background: var(--surface); border: 1px solid var(--rule);
+      border-radius: 14px; transition: border-color .2s ease, transform .2s ease;
+    }
+    .feat:hover { border-color: var(--accent); }
+    .feat .num {
+      font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500;
+      color: var(--accent-ink); letter-spacing: .08em;
+    }
+    .feat h3 {
+      font-size: 24px; margin: 12px 0 10px; letter-spacing: -0.01em;
+    }
+    .feat p { color: var(--ink-dim); margin: 0; font-size: 15px; }
+
+    /* Code */
+    pre, code { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+    pre {
+      background: var(--code-bg); color: var(--code-ink);
+      padding: 24px 28px; border-radius: 14px; overflow-x: auto;
+      font-size: 13.5px; line-height: 1.6; margin: 0;
+    }
+    .code-label {
+      display: inline-block; font-size: 11px; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--ink-dim); margin-bottom: 10px;
+    }
+    code.inline {
+      background: var(--surface-2); padding: 2px 7px; border-radius: 5px;
+      font-size: .92em;
+    }
+    .tok-k { color: #d4886b; }
+    .tok-s { color: #b8c77c; }
+    .tok-c { color: #7f7a72; font-style: italic; }
+    .tok-p { color: #e8e2d5; }
+
+    /* Architecture diagram */
+    .diagram {
+      background: var(--surface); border: 1px solid var(--rule); border-radius: 14px;
+      padding: 32px;
+    }
+    .diagram svg { width: 100%; height: auto; display: block; }
+
+    /* Table */
+    .cmp-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 14.5px; background: var(--surface);
+      border: 1px solid var(--rule); border-radius: 14px; overflow: hidden;
+    }
+    .cmp-table th, .cmp-table td {
+      padding: 14px 18px; text-align: left;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+    }
+    .cmp-table thead { background: var(--surface-2); }
+    .cmp-table th {
+      font-weight: 500; font-size: 13px; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--ink-dim);
+    }
+    .cmp-table td.own { color: var(--ink); font-weight: 500; }
+    .cmp-table tr:last-child td { border-bottom: none; }
+
+    /* Quote */
+    .quote {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(28px, 3vw, 38px);
+      line-height: 1.25; letter-spacing: -0.01em;
+      max-width: 28ch;
+    }
+    .quote .attribution {
+      display: block; font-family: 'Inter', sans-serif;
+      font-size: 14px; color: var(--ink-dim);
+      margin-top: 20px; letter-spacing: .02em;
+    }
+
+    /* Callout */
+    .callout {
+      padding: 40px; background: var(--surface-2);
+      border-radius: 14px; border: 1px solid var(--rule);
+    }
+
+    /* Footer */
+    footer {
+      padding: 48px 0 64px; border-top: 1px solid var(--rule);
+      font-size: 13px; color: var(--ink-dim);
+    }
+    footer .footer-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px;
+    }
+    @media (max-width: 900px) { footer .footer-grid { grid-template-columns: 1fr 1fr; } }
+    footer h4 {
+      font-family: 'Inter', sans-serif; font-size: 12px;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--ink); margin-bottom: 14px; font-weight: 600;
+    }
+    footer ul { list-style: none; padding: 0; margin: 0; }
+    footer li { margin: 8px 0; }
+    footer li a { border-bottom: none; color: var(--ink-dim); }
+    footer li a:hover { color: var(--accent-ink); }
+    .disclaimer {
+      margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--rule);
+      font-size: 12px; color: var(--ink-dim);
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#">
+      <span class="brand-mark"></span>
+      Conclave
+    </a>
+    <div class="nav-links">
+      <a href="#why">Why</a>
+      <a href="#how">How it works</a>
+      <a href="#benchmark">Benchmark</a>
+      <a href="#integrate">Integrate</a>
+      <a class="pill" href="https://github.com/Denis-hamon/conclave">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<header class="container hero">
+  <div class="eyebrow">Engineering · April 2026</div>
+  <h1>The organizational layer for Claude Managed Agents.</h1>
+  <p class="lede">
+    Conclave is an open-source framework that brings <em>roles</em>,
+    <em>deliberation</em>, and <em>auditability</em> to multi-agent systems
+    built on Anthropic primitives — Managed Agents, MCP, and the Claude
+    model family.
+  </p>
+  <div class="cta-row">
+    <a class="btn" href="https://github.com/Denis-hamon/conclave">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.22.48-2.69-1.07-2.69-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.67.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      View on GitHub
+    </a>
+    <a class="btn ghost" href="#how">Read the write-up →</a>
+  </div>
+
+  <div class="byline">
+    <span>By the Conclave contributors</span>
+    <span class="sep"></span>
+    <span>Reference implementation</span>
+    <span class="sep"></span>
+    <span>MIT licensed</span>
+  </div>
+</header>
+
+<!-- ================= WHY ================= -->
+<section id="why" class="container">
+  <h2>A bureau, not a graph.</h2>
+  <p class="intro">
+    Most multi-agent frameworks model <strong>tasks</strong> or
+    <strong>graphs</strong>. Real organizations don't work that way. They work
+    through roles that hold persistent accountability, deliberate together,
+    and leave an audit trail. Conclave makes that the primitive.
+  </p>
+
+  <div class="feat-grid">
+    <article class="feat">
+      <div class="num">01</div>
+      <h3>Roles, not tasks.</h3>
+      <p>Define your org in YAML — CPO, TechLead, QA — each with a persona, reporting line, tools, and persistent memory. A role is a first-class object, not an ad-hoc function.</p>
+    </article>
+    <article class="feat">
+      <div class="num">02</div>
+      <h3>Token-aware routing.</h3>
+      <p>A classifier decides per task: repetitive work goes to a Haiku self-correction loop, novel work goes to Sonnet. Typical savings: 60–80% versus running everything on a frontier model.</p>
+    </article>
+    <article class="feat">
+      <div class="num">03</div>
+      <h3>Decision Trail, always on.</h3>
+      <p>Every inter-agent message is written to a JSONL trail with provenance, reasoning, and cost. Replayable, diffable, postmortem-ready — no extra wiring.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ================= DEFINE + RUN ================= -->
+<section id="how" class="container">
+  <div class="two-col">
+    <div>
+      <h2>Define an organization. Give it a goal.</h2>
+      <p class="intro">
+        A Conclave is a small group of Claude-backed agents, each anchored to
+        one role, working through a structured deliberation until a concrete
+        output is produced. The file below is the <em>entire</em> configuration.
+      </p>
+      <span class="code-label">examples/product_squad.yml</span>
+      <pre><code><span class="tok-k">org</span><span class="tok-p">:</span>
+  <span class="tok-k">name</span><span class="tok-p">:</span> <span class="tok-s">"Product Squad"</span>
+  <span class="tok-k">deliberation</span><span class="tok-p">:</span> hierarchy
+  <span class="tok-k">backend</span><span class="tok-p">:</span> managed_agents   <span class="tok-c"># anthropic | managed_agents</span>
+
+  <span class="tok-k">agents</span><span class="tok-p">:</span>
+    <span class="tok-p">-</span> <span class="tok-k">role</span><span class="tok-p">:</span> CPO
+      <span class="tok-k">persona</span><span class="tok-p">:</span> <span class="tok-s">"Strategic. Defines scope. Validates business value."</span>
+      <span class="tok-k">tools</span><span class="tok-p">:</span> [notion, slack]
+      <span class="tok-k">force_model</span><span class="tok-p">:</span> claude-sonnet-4-6
+
+    <span class="tok-p">-</span> <span class="tok-k">role</span><span class="tok-p">:</span> TechLead
+      <span class="tok-k">persona</span><span class="tok-p">:</span> <span class="tok-s">"Tight specs. Flags blockers. Offers two options, not one."</span>
+      <span class="tok-k">reports_to</span><span class="tok-p">:</span> CPO
+      <span class="tok-k">tools</span><span class="tok-p">:</span> [github, linear]
+
+    <span class="tok-p">-</span> <span class="tok-k">role</span><span class="tok-p">:</span> QA_Engineer
+      <span class="tok-k">persona</span><span class="tok-p">:</span> <span class="tok-s">"Adversarial. Never approves without a test plan."</span>
+      <span class="tok-k">reports_to</span><span class="tok-p">:</span> TechLead
+      <span class="tok-k">tools</span><span class="tok-p">:</span> [github, browserbase]</code></pre>
+    </div>
+
+    <div>
+      <h2 style="visibility:hidden">&nbsp;</h2>
+      <p class="intro">
+        Running it is one command. Add <code class="inline">--dry-run</code>
+        to simulate the whole pipeline without spending a token.
+      </p>
+      <span class="code-label">terminal</span>
+      <pre><code><span class="tok-c">$ pip install conclave-agents</span>
+<span class="tok-c">$ conclave init --template product-squad</span>
+<span class="tok-c">$ conclave run "Spec the checkout API" --dry-run</span>
+
+◆ Conclave · Deliberation started
+  [user]     → CPO
+    Spec the checkout API
+  [CPO]      → TechLead
+    Please pick this up and produce the next artifact.
+    ↳ delegating to TechLead
+  [TechLead] → QA_Engineer
+    Your turn. Flag blockers early.
+    ↳ delegating to QA_Engineer
+  ✓ Output from QA_Engineer
+
+◆ Deliberation complete
+  Trail →  .conclave/trail_20260419.jsonl
+  haiku   865 in    359 out  $0.0021
+  sonnet  988 in    328 out  $0.0079
+  TOTAL                        $0.0100
+  BASELINE (all-Sonnet)        $0.0159
+  SAVED   $0.0059  (36.9%)</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ARCHITECTURE ================= -->
+<section class="container">
+  <h2>Built on Anthropic primitives, by design.</h2>
+  <p class="intro">
+    Conclave does not reinvent the agent. It wraps Managed Agents sessions in
+    a coordination layer, binds tool access to MCP servers, and routes across
+    the Claude model family — so every future Anthropic release is a step
+    forward, not a rewrite.
+  </p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 960 380" xmlns="http://www.w3.org/2000/svg" aria-label="Conclave architecture">
+      <defs>
+        <style>
+          .b-box { fill: #ffffff; stroke: #e8e2d5; stroke-width: 1.5; rx: 10; }
+          .b-box.accent { stroke: #cc785c; }
+          .b-label { font: 500 13px 'Inter', sans-serif; fill: #191817; }
+          .b-sub   { font: 400 11px 'Inter', sans-serif; fill: #6b6762; }
+          .b-title { font: 500 14px 'Fraunces', serif; fill: #191817; }
+          .b-arrow { stroke: #6b6762; stroke-width: 1.3; fill: none; marker-end: url(#arrowhead); }
+        </style>
+        <marker id="arrowhead" viewBox="0 0 10 10" refX="10" refY="5"
+                markerUnits="strokeWidth" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#6b6762" />
+        </marker>
+      </defs>
+
+      <!-- YAML on left -->
+      <rect x="20" y="150" width="170" height="90" class="b-box" rx="10" />
+      <text x="105" y="180" class="b-title" text-anchor="middle">conclave.yml</text>
+      <text x="105" y="202" class="b-sub" text-anchor="middle">org chart · personas</text>
+      <text x="105" y="218" class="b-sub" text-anchor="middle">tools · backend</text>
+
+      <!-- Conclave core -->
+      <rect x="250" y="60" width="420" height="260" class="b-box accent" rx="10" />
+      <text x="460" y="88" class="b-title" text-anchor="middle">Conclave runtime</text>
+
+      <rect x="276" y="108" width="170" height="60" class="b-box" rx="8" />
+      <text x="361" y="130" class="b-label" text-anchor="middle">Task Router</text>
+      <text x="361" y="148" class="b-sub" text-anchor="middle">Haiku classifier · tiered routing</text>
+
+      <rect x="470" y="108" width="170" height="60" class="b-box" rx="8" />
+      <text x="555" y="130" class="b-label" text-anchor="middle">Conclave Bus</text>
+      <text x="555" y="148" class="b-sub" text-anchor="middle">deliberation · handoff</text>
+
+      <rect x="276" y="188" width="170" height="60" class="b-box" rx="8" />
+      <text x="361" y="210" class="b-label" text-anchor="middle">Decision Trail</text>
+      <text x="361" y="228" class="b-sub" text-anchor="middle">JSONL · replayable</text>
+
+      <rect x="470" y="188" width="170" height="60" class="b-box" rx="8" />
+      <text x="555" y="210" class="b-label" text-anchor="middle">Cost Meter</text>
+      <text x="555" y="228" class="b-sub" text-anchor="middle">per-role · vs baseline</text>
+
+      <rect x="276" y="268" width="364" height="40" class="b-box" rx="8" />
+      <text x="458" y="292" class="b-label" text-anchor="middle">Backend abstraction — anthropic · managed_agents</text>
+
+      <!-- Anthropic primitives on right -->
+      <rect x="730" y="60" width="210" height="60" class="b-box" rx="10" />
+      <text x="835" y="86" class="b-title" text-anchor="middle">Managed Agents</text>
+      <text x="835" y="106" class="b-sub" text-anchor="middle">sessions · persistent state</text>
+
+      <rect x="730" y="140" width="210" height="60" class="b-box" rx="10" />
+      <text x="835" y="166" class="b-title" text-anchor="middle">Model Context Protocol</text>
+      <text x="835" y="186" class="b-sub" text-anchor="middle">tools · connectors</text>
+
+      <rect x="730" y="220" width="210" height="60" class="b-box" rx="10" />
+      <text x="835" y="246" class="b-title" text-anchor="middle">Claude model family</text>
+      <text x="835" y="266" class="b-sub" text-anchor="middle">Haiku · Sonnet · Opus</text>
+
+      <!-- Arrows -->
+      <path class="b-arrow" d="M190,195 L248,195" />
+      <path class="b-arrow" d="M670,95  L726,95"  />
+      <path class="b-arrow" d="M670,175 L726,170" />
+      <path class="b-arrow" d="M670,260 L726,250" />
+    </svg>
+  </div>
+</section>
+
+<!-- ================= POSITIONING ================= -->
+<section id="benchmark" class="container">
+  <h2>Where it sits next to existing tools.</h2>
+  <p class="intro">
+    Multi-agent frameworks have proliferated. Most rebuild primitives Anthropic
+    already ships. Conclave chooses the opposite: stay thin, lean on Managed
+    Agents and MCP, and add the one thing nobody else does — the
+    <em>organizational layer</em>.
+  </p>
+
+  <table class="cmp-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>LangGraph</th>
+        <th>CrewAI</th>
+        <th>AutoGen</th>
+        <th style="color: var(--accent-ink)">Conclave</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="own">Agent primitive</td>
+        <td>Graph node</td>
+        <td>Task worker</td>
+        <td>Chat participant</td>
+        <td class="own">Organizational role</td>
+      </tr>
+      <tr>
+        <td class="own">Coordination</td>
+        <td>Explicit DAG</td>
+        <td>Linear pipeline</td>
+        <td>Free-form chat</td>
+        <td class="own">Deliberation mode</td>
+      </tr>
+      <tr>
+        <td class="own">Memory</td>
+        <td>Checkpointer</td>
+        <td>Per-task</td>
+        <td>Per-conversation</td>
+        <td class="own">Persistent per-role</td>
+      </tr>
+      <tr>
+        <td class="own">Cost control</td>
+        <td>Manual</td>
+        <td>Manual</td>
+        <td>Manual</td>
+        <td class="own">Router: Haiku vs Sonnet</td>
+      </tr>
+      <tr>
+        <td class="own">Audit</td>
+        <td>Optional traces</td>
+        <td>Logs</td>
+        <td>Chat history</td>
+        <td class="own">Decision Trail, always on</td>
+      </tr>
+      <tr>
+        <td class="own">Config surface</td>
+        <td>Python graph</td>
+        <td>Python + YAML</td>
+        <td>Python</td>
+        <td class="own">YAML-first</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================= QUOTE / CALLOUT ================= -->
+<section class="container">
+  <div class="two-col" style="align-items: center;">
+    <blockquote class="quote">
+      “An org isn't a DAG. It's a living system of accountabilities —
+      and that's the shape Conclave models.”
+      <span class="attribution">— Philosophy, from the project README</span>
+    </blockquote>
+    <div class="callout">
+      <h3 style="font-size: 24px; margin-bottom: 14px;">Forward-compatible by design.</h3>
+      <p style="color: var(--ink-dim); margin-bottom: 18px;">
+        Conclave's backend abstraction means switching from the stateless
+        <code class="inline">messages.create()</code> path to native Managed
+        Agents sessions is a one-line YAML change. When the beta goes GA, the
+        migration is a no-op.
+      </p>
+      <pre style="font-size: 12.5px; padding: 18px 20px;"><code><span class="tok-k">org</span><span class="tok-p">:</span>
+  <span class="tok-k">backend</span><span class="tok-p">:</span> managed_agents</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INTEGRATE ================= -->
+<section id="integrate" class="container">
+  <h2>Try it in under a minute.</h2>
+  <p class="intro">
+    Zero-config dry-run. No API key required to explore the pipeline.
+  </p>
+
+  <div class="two-col">
+    <div>
+      <span class="code-label">install</span>
+      <pre style="margin-bottom: 20px;"><code><span class="tok-c">$ pip install conclave-agents</span>
+<span class="tok-c">$ conclave init --template product-squad</span>
+<span class="tok-c">$ conclave run "Your goal" --dry-run</span></code></pre>
+      <span class="code-label">observe</span>
+      <pre><code><span class="tok-c">$ conclave dashboard</span>
+◆ Conclave Dashboard → http://localhost:7777</code></pre>
+    </div>
+    <div>
+      <span class="code-label">benchmark</span>
+      <pre style="margin-bottom: 20px;"><code><span class="tok-c">$ conclave benchmark --dry-run</span>
+
+Category      Haiku    Sonnet   Conclave   Quality
+──────────────────────────────────────────────────
+repetitive    $0.008   $0.062   $0.009      97%
+operational   $0.011   $0.081   $0.024      91%
+technical     $0.014   $0.098   $0.071      96%
+strategic     $0.009   $0.071   $0.065      98%
+──────────────────────────────────────────────────
+TOTAL         $0.042   $0.312   $0.091      94%</code></pre>
+      <p style="color: var(--ink-dim); font-size: 15px;">
+        Saves ~70% versus all-Sonnet at 94% quality parity. Run it yourself —
+        all 20 benchmark tasks live in the repo.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top: 48px; display: flex; gap: 14px; flex-wrap: wrap;">
+    <a class="btn" href="https://github.com/Denis-hamon/conclave">Star on GitHub</a>
+    <a class="btn ghost" href="https://github.com/Denis-hamon/conclave/blob/main/ANTHROPIC.md">Read ANTHROPIC.md</a>
+    <a class="btn ghost" href="https://github.com/Denis-hamon/conclave/blob/main/CLAUDE_CODE_ROADMAP.md">Implementation roadmap</a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="#"><span class="brand-mark"></span>Conclave</a>
+        <p style="max-width: 36ch; margin-top: 14px; color: var(--ink-dim);">
+          The organizational layer for Claude Managed Agents. Open-source,
+          MIT-licensed, built on Anthropic primitives.
+        </p>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="https://github.com/Denis-hamon/conclave">Repository</a></li>
+          <li><a href="https://github.com/Denis-hamon/conclave/blob/main/README.md">README</a></li>
+          <li><a href="https://github.com/Denis-hamon/conclave/blob/main/ANTHROPIC.md">ANTHROPIC.md</a></li>
+          <li><a href="https://github.com/Denis-hamon/conclave/issues">Issues</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Anthropic</h4>
+        <ul>
+          <li><a href="https://docs.anthropic.com/managed-agents">Managed Agents</a></li>
+          <li><a href="https://modelcontextprotocol.io">Model Context Protocol</a></li>
+          <li><a href="https://www.anthropic.com/news">Engineering blog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>License</h4>
+        <ul>
+          <li><a href="https://github.com/Denis-hamon/conclave/blob/main/README.md">MIT</a></li>
+          <li><a href="https://github.com/Denis-hamon/conclave/blob/main/CONTRIBUTING.md">Contributing</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="disclaimer">
+      Conclave is an independent, community-driven reference implementation.
+      It is not an official Anthropic product. The Anthropic name, logo, and
+      related marks belong to Anthropic PBC — referenced here only to credit
+      the primitives Conclave is built on.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

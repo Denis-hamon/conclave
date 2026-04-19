@@ -10,7 +10,7 @@
 **Conclave** is an open-source multi-agent framework built natively on [Anthropic Managed Agents](https://docs.anthropic.com/managed-agents).
 Define your organization in YAML. Give it a goal. Watch your agents deliberate.
 
-> 🎬 [Watch the demo](#demo) · ⭐ Star to follow development · 📖 [ANTHROPIC.md](ANTHROPIC.md)
+> 🎬 [Watch the demo](#demo) · 🌐 [Project site](https://denis-hamon.github.io/conclave/) · ⭐ Star to follow development · 📖 [ANTHROPIC.md](ANTHROPIC.md)
 
 ## Quickstart
 
