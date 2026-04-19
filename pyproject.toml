@@ -7,8 +7,9 @@ name = "conclave-agents"
 version = "0.1.0"
 description = "A bureau of Claude agents that deliberates, decides, and delivers."
 readme = "README.md"
-license = { text = "MIT" }
-authors = [{ name = "Conclave Contributors" }]
+license = { file = "LICENSE" }
+authors = [{ name = "Denis Hamon", email = "denis.hamon1@gmail.com" }]
+maintainers = [{ name = "Denis Hamon", email = "denis.hamon1@gmail.com" }]
 keywords = ["anthropic", "claude", "agents", "multi-agent", "llm", "orchestration"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -43,9 +44,11 @@ dashboard = [
 conclave = "conclave.cli:cli"
 
 [project.urls]
-Homepage = "https://github.com/your-handle/conclave"
-Documentation = "https://github.com/your-handle/conclave#readme"
-Issues = "https://github.com/your-handle/conclave/issues"
+Homepage      = "https://denis-hamon.github.io/conclave/"
+Repository    = "https://github.com/Denis-hamon/conclave"
+Documentation = "https://github.com/Denis-hamon/conclave#readme"
+Issues        = "https://github.com/Denis-hamon/conclave/issues"
+Changelog     = "https://github.com/Denis-hamon/conclave/releases"
 
 [tool.hatch.build.targets.wheel]
 packages = ["conclave"]
