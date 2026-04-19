@@ -98,7 +98,47 @@
     .narrow { max-width: 760px; margin: 0 auto; padding: 0 40px; }
 
     /* ---------------- Hero ---------------- */
-    .hero { padding: 120px 0 80px; }
+    .hero {
+      position: relative;
+      padding: 96px 0 88px;
+      overflow: hidden;
+    }
+    /* Subtle paper grain */
+    .hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0.055 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      opacity: .55;
+      pointer-events: none;
+      mix-blend-mode: multiply;
+    }
+    /* Warm halo bottom-right */
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -200px; top: 40%;
+      width: 780px; height: 780px;
+      background: radial-gradient(circle at center, rgba(204,120,92,0.22) 0%, rgba(204,120,92,0.08) 35%, rgba(204,120,92,0) 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .hero .narrow { position: relative; z-index: 1; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 72px;
+      align-items: center;
+    }
+    @media (max-width: 1000px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+      .hero-art  { order: 2; max-width: 560px; margin: 0 auto; }
+    }
+    .hero-art {
+      position: relative;
+      aspect-ratio: 1 / 1.05;
+      width: 100%;
+    }
+    .hero-art svg { width: 100%; height: 100%; display: block; }
     .eyebrow {
       font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
       color: var(--ink-dim); font-weight: 500; margin-bottom: 28px;
@@ -145,7 +185,23 @@
     .meta strong { color: var(--ink-2); font-weight: 500; }
 
     /* ---------------- Sections ---------------- */
-    section { padding: 96px 0; border-top: 1px solid var(--rule); }
+    section {
+      padding: 96px 0;
+      border-top: 1px solid var(--rule);
+      position: relative;
+    }
+    /* Tiny sparkle glyph on section top rule */
+    section::before {
+      content: "";
+      position: absolute;
+      top: -6px; left: 50%; transform: translateX(-50%);
+      width: 11px; height: 11px;
+      background: var(--bg);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'><path d='M0,-12 L1.8,-1.8 L12,0 L1.8,1.8 L0,12 L-1.8,1.8 L-12,0 L-1.8,-1.8 Z' fill='%23CC785C'/></svg>");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 11px 11px;
+    }
     .section-label {
       font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
       color: var(--ink-dim); font-weight: 500; margin-bottom: 24px;
@@ -329,30 +385,133 @@
 
 <!-- ========== Hero ========== -->
 <header class="hero">
-  <div class="narrow" style="max-width: 1100px;">
-    <div class="eyebrow">
-      <span class="dot"></span>
-      Engineering · April 2026 · Open source
-    </div>
-    <h1>The organizational layer <em>for Claude</em> Managed Agents.</h1>
-    <p class="lede">
-      Conclave brings <em>roles</em>, <em>deliberation</em>, and
-      <em>auditability</em> to multi-agent systems built on Anthropic primitives.
-      A thin, opinionated framework that treats organizational coordination —
-      not a graph — as the first-class object.
-    </p>
-    <div class="cta-row">
-      <a class="btn" href="https://github.com/Denis-hamon/conclave">
-        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.22.48-2.69-1.07-2.69-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.67.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-        View on GitHub
-      </a>
-      <a class="btn ghost" href="#how">Read the write-up →</a>
-    </div>
+  <div class="narrow" style="max-width: 1180px;">
+    <div class="hero-grid">
 
-    <div class="meta">
-      <span><strong>Conclave contributors</strong> · reference implementation</span>
-      <span>MIT licensed</span>
-      <span>21 tests · CI green</span>
+      <!-- Left: editorial text -->
+      <div>
+        <div class="eyebrow">
+          <span class="dot"></span>
+          Engineering · April 2026 · Open source
+        </div>
+        <h1>The organizational layer <em>for Claude</em> Managed Agents.</h1>
+        <p class="lede">
+          Conclave brings <em>roles</em>, <em>deliberation</em>, and
+          <em>auditability</em> to multi-agent systems built on Anthropic primitives.
+          A thin, opinionated framework that treats organizational coordination —
+          not a graph — as the first-class object.
+        </p>
+        <div class="cta-row">
+          <a class="btn" href="https://github.com/Denis-hamon/conclave">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.22.48-2.69-1.07-2.69-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.67.07-.52.28-.87.5-1.07-1.77-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.11 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.91.08 2.11.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+            View on GitHub
+          </a>
+          <a class="btn ghost" href="#how">Read the write-up →</a>
+        </div>
+
+        <div class="meta">
+          <span><strong>Conclave contributors</strong> · reference implementation</span>
+          <span>MIT licensed</span>
+          <span>21 tests · CI green</span>
+        </div>
+      </div>
+
+      <!-- Right: editorial illustration -->
+      <div class="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 520 540" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="h-glow" cx="50%" cy="48%" r="55%">
+              <stop offset="0%"  stop-color="#CC785C" stop-opacity="0.38"/>
+              <stop offset="45%" stop-color="#CC785C" stop-opacity="0.14"/>
+              <stop offset="100%" stop-color="#CC785C" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="h-spark" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%"  stop-color="#E09274"/>
+              <stop offset="100%" stop-color="#B8553A"/>
+            </linearGradient>
+            <filter id="h-noise" x="0" y="0" width="100%" height="100%">
+              <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch"/>
+              <feColorMatrix values="0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0.06 0"/>
+            </filter>
+            <!-- Anthropic-style sparkle: 4-point star with thin arms -->
+            <symbol id="spark" viewBox="-12 -12 24 24">
+              <path d="M0,-12 L1.8,-1.8 L12,0 L1.8,1.8 L0,12 L-1.8,1.8 L-12,0 L-1.8,-1.8 Z" fill="currentColor"/>
+            </symbol>
+          </defs>
+
+          <!-- Warm halo -->
+          <circle cx="260" cy="260" r="260" fill="url(#h-glow)"/>
+
+          <!-- Grain overlay inside the art -->
+          <rect x="0" y="0" width="520" height="540" filter="url(#h-noise)" opacity="0.5"/>
+
+          <!-- Concentric dotted rings — deliberation layers -->
+          <circle cx="260" cy="260" r="96"  fill="none" stroke="rgba(20,20,19,0.16)" stroke-width="1" stroke-dasharray="1 5"/>
+          <circle cx="260" cy="260" r="156" fill="none" stroke="rgba(20,20,19,0.12)" stroke-width="1" stroke-dasharray="1 5"/>
+          <circle cx="260" cy="260" r="218" fill="none" stroke="rgba(20,20,19,0.08)" stroke-width="1" stroke-dasharray="1 5"/>
+
+          <!-- Connection lines from center to role chips -->
+          <g stroke="rgba(20,20,19,0.18)" stroke-width="1" stroke-dasharray="2 4" fill="none">
+            <path d="M260,260 L260,92"/>
+            <path d="M260,260 L430,262"/>
+            <path d="M260,260 L178,446"/>
+          </g>
+
+          <!-- Central sparkle (primary) -->
+          <g transform="translate(260 260)">
+            <!-- 8-point: two superimposed 4-point stars -->
+            <path d="M0,-92 L12,-12 L92,0 L12,12 L0,92 L-12,12 L-92,0 L-12,-12 Z" fill="url(#h-spark)"/>
+            <path d="M0,-64 L8,-8 L64,0 L8,8 L0,64 L-8,8 L-64,0 L-8,-8 Z"
+                  fill="#FAF9F5" opacity="0.9" transform="rotate(45)"/>
+            <!-- Inner nucleus -->
+            <circle r="10" fill="#141413"/>
+          </g>
+
+          <!-- Role chips -->
+          <g font-family="'Switzer', sans-serif">
+            <!-- CPO (top) -->
+            <g transform="translate(194 74)">
+              <rect x="0" y="0" width="132" height="36" rx="18"
+                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)"/>
+              <circle cx="16" cy="18" r="4" fill="#CC785C"/>
+              <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">CPO</text>
+              <text x="58" y="22" font-size="11.5" fill="#6A6863">· Sonnet</text>
+            </g>
+            <!-- TechLead (right) -->
+            <g transform="translate(370 244)">
+              <rect x="0" y="0" width="138" height="36" rx="18"
+                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)"/>
+              <circle cx="16" cy="18" r="4" fill="#9CB47C"/>
+              <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">TechLead</text>
+              <text x="92" y="22" font-size="11.5" fill="#6A6863">· Haiku</text>
+            </g>
+            <!-- QA (bottom-left) -->
+            <g transform="translate(96 428)">
+              <rect x="0" y="0" width="164" height="36" rx="18"
+                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)"/>
+              <circle cx="16" cy="18" r="4" fill="#8B7FB8"/>
+              <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">QA_Engineer</text>
+              <text x="118" y="22" font-size="11.5" fill="#6A6863">· Haiku</text>
+            </g>
+          </g>
+
+          <!-- Decorative scattered sparkles -->
+          <g color="#CC785C" opacity="0.55">
+            <use href="#spark" x="78"  y="108" width="14" height="14"/>
+            <use href="#spark" x="432" y="128" width="18" height="18"/>
+            <use href="#spark" x="448" y="394" width="12" height="12"/>
+            <use href="#spark" x="92"  y="348" width="16" height="16"/>
+            <use href="#spark" x="344" y="72"  width="10" height="10"/>
+          </g>
+
+          <!-- Tiny on-screen label -->
+          <g font-family="'Switzer', sans-serif" fill="#6A6863">
+            <text x="260" y="506" font-size="11" letter-spacing="0.14em" text-transform="uppercase" text-anchor="middle">
+              ONE GOAL · THREE ROLES · ONE DECISION TRAIL
+            </text>
+          </g>
+        </svg>
+      </div>
     </div>
   </div>
 </header>
