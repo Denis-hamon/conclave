@@ -24,12 +24,12 @@ conclave run "Your goal here"
 
 ## Demo
 
-![Conclave demo](examples/demo.svg)
+![Conclave demo](examples/demo.gif)
 
-*Product Squad deliberating on a checkout API spec. 3 agents, 3 turns, ~34% cheaper than all-Sonnet on this run — and up to ~70% on workloads with more repetitive handoffs.*
+*Product Squad deliberating on a checkout API spec. 3 agents, 3 turns, ~37% cheaper than all-Sonnet on this run — and up to ~70% on workloads with more repetitive handoffs.*
 
-The static SVG above is regenerated with `python examples/render_demo.py`.
-For an animated GIF, record with [`vhs`](https://github.com/charmbracelet/vhs) — see [`examples/DEMO_RECORDING.md`](examples/DEMO_RECORDING.md).
+The animated GIF above is regenerated with `python examples/render_gif.py` (pure Pillow, no external tooling).
+A static SVG screenshot is also available at [`examples/demo.svg`](examples/demo.svg).
 
 ---
 
