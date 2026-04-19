@@ -11,7 +11,10 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+  <!-- Anthropic proxies: Switzer ~ Styrene A, Sentient ~ Copernicus/Tiempos -->
+  <link href="https://api.fontshare.com/v2/css?f[]=switzer@300,400,500,600&f[]=sentient@300,400,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -38,12 +41,12 @@
     body {
       background: var(--bg);
       color: var(--ink);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Switzer', 'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 16px;
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
-      font-feature-settings: "ss01", "cv11";
+      font-feature-settings: "ss01", "ss02";
     }
     ::selection { background: var(--accent); color: #fff; }
 
@@ -51,12 +54,11 @@
     a:hover { color: var(--accent-2); }
 
     h1, h2, h3, h4 {
-      font-family: 'Fraunces', 'Tiempos Headline', 'Times New Roman', serif;
+      font-family: 'Sentient', 'Copernicus', 'Tiempos Headline', Georgia, serif;
       font-weight: 400;
       letter-spacing: -0.022em;
       line-height: 1.06;
       margin: 0;
-      font-variation-settings: "opsz" 144;
       color: var(--ink);
     }
     p { margin: 0 0 1.1em; }
@@ -75,9 +77,8 @@
     }
     .brand {
       display: inline-flex; align-items: center; gap: 10px;
-      font-family: 'Fraunces', serif; font-size: 18px; font-weight: 400;
+      font-family: 'Sentient', 'Copernicus', Georgia, serif; font-size: 18px; font-weight: 400;
       color: var(--ink);
-      font-variation-settings: "opsz" 18;
     }
     .brand svg { width: 18px; height: 18px; display: block; }
     .nav-links {
@@ -112,12 +113,10 @@
       max-width: 16ch;
       margin-bottom: 36px;
       font-weight: 300;
-      font-variation-settings: "opsz" 144;
     }
     .hero h1 em {
       font-style: italic;
       color: var(--accent-2);
-      font-variation-settings: "opsz" 144;
     }
     .hero .lede {
       font-size: 20px; line-height: 1.5; color: var(--ink-2);
@@ -173,9 +172,8 @@
     }
     @media (max-width: 900px) { .feat-list { grid-template-columns: 1fr; gap: 32px; } }
     .feat-item .num {
-      font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500;
+      font-family: 'Sentient', 'Copernicus', Georgia, serif; font-size: 14px; font-weight: 500;
       color: var(--accent-2); letter-spacing: 0.04em;
-      font-variation-settings: "opsz" 14;
     }
     .feat-item h3 {
       font-size: 26px; margin: 14px 0 12px;
@@ -235,7 +233,7 @@
       border-bottom: 1px solid var(--rule);
     }
     .cmp-table thead th {
-      font-family: 'Inter', sans-serif; font-weight: 500; font-size: 12px;
+      font-family: 'Switzer', sans-serif; font-weight: 500; font-size: 12px;
       letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-dim);
       border-bottom: 1px solid var(--ink);
     }
@@ -251,15 +249,14 @@
 
     /* Pull quote */
     .quote {
-      font-family: 'Fraunces', serif;
+      font-family: 'Sentient', 'Copernicus', Georgia, serif;
       font-size: clamp(28px, 3.4vw, 44px);
       line-height: 1.18; letter-spacing: -0.02em;
       max-width: 22ch; font-weight: 300;
-      font-variation-settings: "opsz" 120;
     }
     .quote em { color: var(--accent-2); font-style: italic; }
     .attribution {
-      display: block; font-family: 'Inter', sans-serif;
+      display: block; font-family: 'Switzer', sans-serif;
       font-size: 13px; color: var(--ink-dim);
       margin-top: 24px; letter-spacing: 0.02em; font-weight: 400;
     }
@@ -288,7 +285,7 @@
     }
     @media (max-width: 900px) { footer .footer-grid { grid-template-columns: 1fr 1fr; } }
     footer h4 {
-      font-family: 'Inter', sans-serif; font-size: 11px;
+      font-family: 'Switzer', sans-serif; font-size: 11px;
       text-transform: uppercase; letter-spacing: 0.1em;
       color: var(--ink); margin-bottom: 16px; font-weight: 500;
     }
@@ -485,10 +482,10 @@
             .a-box    { fill: #FAF9F5; stroke: rgba(20,20,19,0.10); stroke-width: 1; }
             .a-box.hl { stroke: #CC785C; stroke-width: 1.4; }
             .a-box.a  { fill: #F3E2D9; stroke: rgba(204,120,92,0.35); }
-            .a-title  { font-family: 'Fraunces', serif; font-weight: 400; font-size: 15px; fill: #141413; }
-            .a-label  { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 13px; fill: #141413; }
-            .a-sub    { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 11.5px; fill: #6A6863; letter-spacing: 0.01em; }
-            .a-cat    { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 10.5px; fill: #97948E; letter-spacing: 0.14em; text-transform: uppercase; }
+            .a-title  { font-family: 'Sentient', 'Copernicus', Georgia, serif; font-weight: 400; font-size: 15px; fill: #141413; }
+            .a-label  { font-family: 'Switzer', sans-serif; font-weight: 500; font-size: 13px; fill: #141413; }
+            .a-sub    { font-family: 'Switzer', sans-serif; font-weight: 400; font-size: 11.5px; fill: #6A6863; letter-spacing: 0.01em; }
+            .a-cat    { font-family: 'Switzer', sans-serif; font-weight: 500; font-size: 10.5px; fill: #97948E; letter-spacing: 0.14em; text-transform: uppercase; }
             .a-line   { stroke: #97948E; stroke-width: 1; fill: none; }
             .a-line.dashed { stroke-dasharray: 3 4; }
             .a-arrow  { fill: #97948E; }
@@ -596,9 +593,9 @@
             .r-box.haiku  { fill: #EDF4E6; stroke: #9CB47C; }
             .r-box.sonnet { fill: #F3E2D9; stroke: #CC785C; }
             .r-box.opus   { fill: #E6E2F4; stroke: #8B7FB8; }
-            .r-title  { font-family: 'Fraunces', serif; font-weight: 400; font-size: 15px; fill: #141413; }
-            .r-label  { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 13px; fill: #141413; }
-            .r-sub    { font-family: 'Inter', sans-serif; font-size: 11.5px; fill: #6A6863; }
+            .r-title  { font-family: 'Sentient', 'Copernicus', Georgia, serif; font-weight: 400; font-size: 15px; fill: #141413; }
+            .r-label  { font-family: 'Switzer', sans-serif; font-weight: 500; font-size: 13px; fill: #141413; }
+            .r-sub    { font-family: 'Switzer', sans-serif; font-size: 11.5px; fill: #6A6863; }
             .r-tag    { font-family: 'IBM Plex Mono', monospace; font-size: 11px; fill: #141413; }
             .r-line   { stroke: #97948E; stroke-width: 1.1; fill: none; }
             .r-arrow  { fill: #97948E; }
@@ -680,10 +677,10 @@
             .s-head.cpo    { fill: #F3E2D9; stroke: #CC785C; }
             .s-head.tl     { fill: #EDF4E6; stroke: #9CB47C; }
             .s-head.qa     { fill: #E6E2F4; stroke: #8B7FB8; }
-            .s-name   { font-family: 'Fraunces', serif; font-size: 14px; fill: #141413; font-weight: 400; }
-            .s-role   { font-family: 'Inter', sans-serif; font-size: 11px; fill: #6A6863; letter-spacing: 0.04em; }
+            .s-name   { font-family: 'Sentient', 'Copernicus', Georgia, serif; font-size: 14px; fill: #141413; font-weight: 400; }
+            .s-role   { font-family: 'Switzer', sans-serif; font-size: 11px; fill: #6A6863; letter-spacing: 0.04em; }
             .s-msg    { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; fill: #141413; }
-            .s-meta   { font-family: 'Inter', sans-serif; font-size: 10.5px; fill: #97948E; letter-spacing: 0.06em; }
+            .s-meta   { font-family: 'Switzer', sans-serif; font-size: 10.5px; fill: #97948E; letter-spacing: 0.06em; }
             .s-line   { stroke: #6A6863; stroke-width: 1.2; fill: none; }
             .s-line.handoff  { stroke: #CC785C; }
             .s-line.output   { stroke: #9CB47C; }
@@ -961,7 +958,7 @@ TOTAL         $0.042   $0.312   $0.091      94%</code></pre>
       credit the primitives Conclave is built on.
     </p>
     <p class="colophon">
-      Set in Fraunces &amp; Inter · IBM Plex Mono for code
+      Set in Sentient &amp; Switzer · IBM Plex Mono for code
     </p>
   </div>
 </footer>
