@@ -1,6 +1,8 @@
 # Conclave
 
 ![Tests](https://github.com/Denis-hamon/conclave/actions/workflows/test.yml/badge.svg)
+![CodeQL](https://github.com/Denis-hamon/conclave/actions/workflows/codeql.yml/badge.svg)
+![codecov](https://codecov.io/gh/Denis-hamon/conclave/branch/main/graph/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Built on Claude](https://img.shields.io/badge/built%20on-Claude%20Managed%20Agents-orange)
 
