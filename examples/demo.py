@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 from conclave.dry_run import DryRunClient
 from conclave.org import load_org
-from conclave.bus import Conclavebus
+from conclave.bus import ConclaveBus
 from rich.console import Console
 from rich.panel import Panel
 
@@ -78,7 +78,7 @@ def main():
     trail_dir.mkdir(exist_ok=True)
     trail_path = trail_dir / f"demo_trail_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
 
-    bus = Conclavebus(
+    bus = ConclaveBus(
         agents=agents,
         deliberation=delib,
         trail_path=trail_path,

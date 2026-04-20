@@ -1,4 +1,4 @@
-"""Unit tests for Conclavebus."""
+"""Unit tests for ConclaveBus."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from conclave.agent import ConclaveAgent
-from conclave.bus import Conclavebus
+from conclave.bus import ConclaveBus
 
 
 def _classifier_payload():
@@ -43,7 +43,7 @@ def test_single_turn_routing(mock_client, tmp_path: Path):
     ]
     lead = _agent(mock_client, "Lead")
     worker = _agent(mock_client, "Worker", reports_to="Lead")
-    bus = Conclavebus(
+    bus = ConclaveBus(
         agents={"Lead": lead, "Worker": worker},
         deliberation="hierarchy",
         trail_path=tmp_path / "trail.jsonl",
@@ -60,7 +60,7 @@ def test_decision_trail_written(mock_client, tmp_path: Path):
     ]
     lead = _agent(mock_client, "Lead")
     trail = tmp_path / "trail.jsonl"
-    bus = Conclavebus(
+    bus = ConclaveBus(
         agents={"Lead": lead},
         deliberation="hierarchy",
         trail_path=trail,
@@ -88,7 +88,7 @@ def test_max_turns_stops_loop(mock_client, tmp_path: Path):
 
     lead = _agent(mock_client, "Lead")
     worker = _agent(mock_client, "Worker", reports_to="Lead")
-    bus = Conclavebus(
+    bus = ConclaveBus(
         agents={"Lead": lead, "Worker": worker},
         deliberation="hierarchy",
         trail_path=tmp_path / "trail.jsonl",

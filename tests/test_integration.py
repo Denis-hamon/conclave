@@ -39,7 +39,7 @@ def _responder(call_counter):
 
 
 def test_full_run_product_squad(tmp_path: Path, monkeypatch):
-    from conclave.bus import Conclavebus
+    from conclave.bus import ConclaveBus
     from conclave.org import load_org
 
     # Copy product_squad.yml to tmp
@@ -69,7 +69,7 @@ def test_full_run_product_squad(tmp_path: Path, monkeypatch):
 
     agents, org_name, delib, entry = load_org(yml, client)
     trail = tmp_path / "trail.jsonl"
-    bus = Conclavebus(agents=agents, deliberation=delib, trail_path=trail, max_turns=6)
+    bus = ConclaveBus(agents=agents, deliberation=delib, trail_path=trail, max_turns=6)
     bus.run("Design a checkout API", entry_agent=entry)
 
     assert trail.exists()

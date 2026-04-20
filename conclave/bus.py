@@ -20,7 +20,7 @@ console = Console()
 ROLE_COLORS = ["cyan", "magenta", "yellow", "green", "blue", "red", "white"]
 
 
-class Conclavebus:
+class ConclaveBus:
     """
     Routes messages between agents.
     Writes every handoff to the Decision Trail.

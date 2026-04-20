@@ -20,7 +20,7 @@ Stack: Python 3.11+, Click CLI, Rich terminal UI, Anthropic SDK, PyYAML.
 
 Key files:
 - `conclave/agent.py` — ConclaveAgent (one persistent role)
-- `conclave/bus.py` — Conclavebus (message router + deliberation)
+- `conclave/bus.py` — ConclaveBus (message router + deliberation)
 - `conclave/router.py` — TaskRouter (routes tasks to Haiku vs Sonnet)
 - `conclave/cost.py` — CostMeter (token cost tracking)
 - `conclave/certification/` — observatory, skillset, simulator, certifier
@@ -118,7 +118,7 @@ Test `ConclaveAgent`:
 
 ### 1.6 Unit tests — `tests/test_bus.py`
 
-Test `Conclavebus`:
+Test `ConclaveBus`:
 
 - **test_single_turn_routing**: two agents (Lead → Worker), seed message to Lead, mock Lead returning `[TO: Worker]\nDo this`, mock Worker returning `[OUTPUT: result.md]\nDone` → assert `bus.outputs` has one entry
 - **test_decision_trail_written**: after `bus.run()`, assert trail JSONL file exists and each line is valid JSON with `from`, `to`, `type`, `content` keys

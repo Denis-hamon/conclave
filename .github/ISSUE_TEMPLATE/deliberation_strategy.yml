@@ -1,0 +1,44 @@
+name: Deliberation strategy proposal
+description: Propose a new coordination pattern beyond hierarchy / consensus / first-valid.
+labels: ["deliberation", "enhancement"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Strategy name
+      placeholder: "rotating-chair"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: One-line summary
+      placeholder: "Each turn, a different role leads the deliberation and others react."
+    validations:
+      required: true
+
+  - type: textarea
+    id: when-to-use
+    attributes:
+      label: When is this useful?
+      description: What org dynamic does this capture that hierarchy / consensus / first-valid miss?
+    validations:
+      required: true
+
+  - type: textarea
+    id: pseudocode
+    attributes:
+      label: Pseudocode
+      description: Enough detail that someone could implement it in conclave/bus.py.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: stop-condition
+    attributes:
+      label: Stop condition
+      description: How does the deliberation terminate? Consensus reached? Max turns? Explicit escalation?
+    validations:
+      required: true

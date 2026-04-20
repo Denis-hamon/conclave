@@ -53,7 +53,7 @@ def cli():
 )
 def run(goal, org, deliberation, max_turns, trail_dir, dry_run):
     """Run a goal through the org and produce a Decision Trail."""
-    from .bus import Conclavebus
+    from .bus import ConclaveBus
     from .org import load_org
 
     if dry_run:
@@ -71,7 +71,7 @@ def run(goal, org, deliberation, max_turns, trail_dir, dry_run):
     prefix = "dry_run_trail" if dry_run else "trail"
     trail_path = Path(trail_dir) / f"{prefix}_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
 
-    Conclavebus(
+    ConclaveBus(
         agents=agents,
         deliberation=deliberation or default_delib,
         trail_path=trail_path,

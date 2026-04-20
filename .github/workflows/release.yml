@@ -1,0 +1,47 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build tooling
+        run: pip install --upgrade build
+      - name: Verify tag matches pyproject version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          pyproject_version=$(python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')
+          if [ "$tag_version" != "$pyproject_version" ]; then
+            echo "Tag v$tag_version does not match pyproject version $pyproject_version" >&2
+            exit 1
+          fi
+      - name: Build sdist + wheel
+        run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/conclave-agents
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI (trusted publishing, OIDC)
+        uses: pypa/gh-action-pypi-publish@release/v1

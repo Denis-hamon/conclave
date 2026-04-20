@@ -1,0 +1,59 @@
+name: Persona proposal
+description: Propose a new persona or org template for examples/.
+labels: ["persona", "template"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The quality of a Conclave agent is almost entirely in its persona. Strong personas
+        are **specific, opinionated, and describe *how* the role thinks** — not just what
+        it does. See `CONTRIBUTING.md` for examples of weak vs strong personas.
+
+  - type: input
+    id: role
+    attributes:
+      label: Role name
+      placeholder: "PrincipalEngineer"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Single role to add to an existing template
+        - Full new org template (startup, agency, squad, ...)
+    validations:
+      required: true
+
+  - type: textarea
+    id: persona
+    attributes:
+      label: Persona block
+      description: The YAML persona block you'd submit.
+      render: yaml
+      placeholder: |
+        - role: PrincipalEngineer
+          persona: |
+            Systems thinker. Writes RFCs before code.
+            Always asks "what would kill this at 10x scale?"
+            Prefers boring technology. Flags operational debt early.
+          tools: [github, linear]
+    validations:
+      required: true
+
+  - type: textarea
+    id: when-it-works
+    attributes:
+      label: When does this persona produce good deliberation?
+      description: What task types / org contexts is this persona actually useful in?
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried-it
+    attributes:
+      label: Evidence you've tried it (optional but strong signal)
+      description: Paste a snippet of the Decision Trail this persona produced on a real deliberation.
+      render: shell

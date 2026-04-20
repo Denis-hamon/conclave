@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in Conclave doesn't behave as documented.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you get instead?
+      placeholder: |
+        Running `conclave run "..." --dry-run` crashed with ...
+        I expected the deliberation to complete and write a trail.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Commands + `conclave.yml` (or template name) that reproduce the bug.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output / trail
+      description: Stack trace or the relevant portion of the Decision Trail JSONL.
+      render: shell
+
+  - type: input
+    id: conclave-version
+    attributes:
+      label: Conclave version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      placeholder: "3.12.1"
+    validations:
+      required: true
