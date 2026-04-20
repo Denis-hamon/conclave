@@ -3,167 +3,475 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>◆ Conclave Dashboard</title>
+  <title>Conclave — Control Plane</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <!--
+    Font stack follows dashboard-ui/DESIGN.md:
+      Headline  -> Anthropic Serif (proxy: Fraunces)
+      Body / UI -> Anthropic Sans   (proxy: Inter)
+      Code      -> Anthropic Mono   (proxy: JetBrains Mono)
+  -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    /* Tokens lifted from dashboard-ui/DESIGN.md (Claude / Anthropic). */
     :root {
-      --bg: #0d0d0d;
-      --surface: #141414;
-      --border: #1e1e1e;
-      --text: #e6e6e6;
-      --dim: #8a8a8a;
-      --accent: #f97316;
-      --green: #22c55e;
-      --role-1: #60a5fa;
-      --role-2: #c084fc;
-      --role-3: #facc15;
-      --role-4: #34d399;
+      /* Dark surfaces (control-plane) */
+      --bg:            #141413;   /* Anthropic Near Black */
+      --surface:       #1a1a19;   /* slightly elevated over bg */
+      --surface-2:     #30302e;   /* Dark Surface (cards, nav) */
+      --border:        #2a2a28;
+      --border-strong: #30302e;
+
+      /* Warm neutrals (text) */
+      --fg:            #f5f4ed;   /* Parchment on dark — primary text */
+      --fg-soft:       #b0aea5;   /* Warm Silver — body on dark */
+      --fg-dim:        #87867f;   /* Stone Gray — metadata */
+      --fg-muted:      #5e5d59;   /* Olive Gray — de-emphasized */
+
+      /* Chromatic (used sparingly) */
+      --terracotta:    #c96442;   /* Brand — primary CTAs, live indicators */
+      --coral:         #d97757;   /* Coral Accent — links on dark */
+      --focus:         #3898ec;   /* the only cool color, input focus */
+      --crimson:       #b53333;   /* Error — incidents */
+      --sage:          #7a8b6f;   /* Muted green — positive metrics */
+
+      /* Role palette — also warm-leaning for consistency */
+      --role-1: #d97757;  /* coral */
+      --role-2: #e0b58f;  /* sand */
+      --role-3: #b0aea5;  /* silver */
+      --role-4: #7a8b6f;  /* sage */
+      --role-5: #c96442;  /* terracotta */
     }
+
     * { box-sizing: border-box; }
+
     body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: 'Inter', system-ui, sans-serif;
-      height: 100vh; overflow: hidden;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden;
     }
+
+    /* Typography: serif for headlines (Anthropic signature move). */
+    .serif { font-family: 'Fraunces', Georgia, serif; font-weight: 500; letter-spacing: -0.01em; }
+    .mono  { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+    /* ─── Topbar ────────────────────────────────────────────────────────── */
     .topbar {
-      height: 48px; padding: 0 20px; display: flex; align-items: center;
-      justify-content: space-between; border-bottom: 1px solid var(--border);
+      height: 52px;
+      padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .topbar .brand {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 500;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+    .topbar .brand .mark { color: var(--terracotta); }
+    .topbar .brand .tag {
+      margin-left: 10px;
+      color: var(--fg-dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .topbar nav { display: flex; gap: 2px; }
+    .topbar nav a {
+      color: var(--fg-soft);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .topbar nav a:hover { background: var(--surface-2); color: var(--fg); }
+    .topbar nav a.active { color: var(--fg); background: var(--surface-2); }
+
+    .live {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--fg-dim);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      font-family: 'Inter', sans-serif;
+    }
+    .live .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--terracotta);
+      box-shadow: 0 0 0 0 rgba(201, 100, 66, 0.7);
+      animation: pulse 2.2s ease-out infinite;
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(201, 100, 66, 0.55); }
+      70%  { box-shadow: 0 0 0 8px rgba(201, 100, 66, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(201, 100, 66, 0); }
+    }
+
+    /* ─── Main grid: sidebar + content ─────────────────────────────────── */
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: calc(100vh - 52px);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 22px 20px;
+      overflow-y: auto;
+    }
+
+    .content {
+      padding: 20px 24px 40px;
+      overflow-y: auto;
+    }
+
+    /* ─── Section header ──────────────────────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 0 0 12px;
+    }
+    .section-title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 500;
+      font-size: 22px;
+      letter-spacing: -0.015em;
+      margin: 0 0 4px;
+    }
+    .section-sub {
+      color: var(--fg-dim);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    /* ─── Incident banner (Paperclip-style) ─────────────────────────── */
+    .incident {
+      display: none;
+      border: 1px solid rgba(181, 51, 51, 0.35);
+      background: rgba(181, 51, 51, 0.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      color: #f0b8b8;
       font-size: 13px;
     }
-    .topbar .title { font-weight: 600; letter-spacing: .02em; }
-    .topbar .title span { color: var(--accent); }
-    .topbar .live { color: var(--green); display: flex; align-items: center; gap: 6px; }
-    .topbar .live::before {
-      content: ""; width: 8px; height: 8px; border-radius: 50%;
-      background: var(--green); animation: pulse 1.6s infinite;
+    .incident.active { display: flex; align-items: center; gap: 10px; }
+    .incident .badge {
+      padding: 2px 8px; background: var(--crimson); color: var(--fg);
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+      border-radius: 4px; font-weight: 600;
     }
-    @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
 
-    .grid {
+    /* ─── MetricCards row ─────────────────────────────────────────────── */
+    .metrics {
       display: grid;
-      grid-template-columns: 320px 1fr 360px;
-      height: calc(100vh - 48px);
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
     }
-    .panel {
-      border-right: 1px solid var(--border);
-      padding: 16px 20px; overflow-y: auto;
-    }
-    .panel:last-child { border-right: none; }
-    .panel h2 {
-      margin: 0 0 14px; font-size: 11px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: .1em; color: var(--dim);
-    }
-
-    /* Org tree */
-    #org-tree { font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
-    .org-node {
-      padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
-      margin: 4px 0; display: flex; justify-content: space-between; align-items: center;
+    .metric {
       background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
     }
-    .org-node .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--dim);
+    .metric .label {
+      font-size: 11px;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
     }
-    .org-node.active .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
-    .org-indent { padding-left: 16px; border-left: 1px dashed var(--border); margin-left: 10px; }
-
-    /* Trail */
-    .trail { display: flex; flex-direction: column; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
-    .trail-entry {
-      border: 1px solid var(--border); background: var(--surface);
-      border-radius: 6px; padding: 10px 12px;
-      animation: fadein .4s ease-out;
+    .metric .value {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 34px;
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
     }
-    @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-    .trail-entry .ts { color: var(--dim); font-size: 10px; }
-    .trail-entry .hdr { margin: 4px 0; font-weight: 600; }
-    .trail-entry .content { white-space: pre-wrap; color: var(--text); }
-    .trail-entry .reasoning { font-style: italic; color: var(--dim); margin-top: 6px; font-size: 11px; }
-
-    .filter-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-    .filter-row button {
-      background: var(--surface); color: var(--text); border: 1px solid var(--border);
-      border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer;
-      font-family: inherit;
+    .metric .value .unit {
+      font-size: 16px;
+      color: var(--fg-dim);
+      margin-left: 4px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
     }
-    .filter-row button.active { border-color: var(--accent); color: var(--accent); }
-
-    /* Cost & status */
-    .cost-table { width: 100%; font-family: 'IBM Plex Mono', monospace; font-size: 12px; border-collapse: collapse; }
-    .cost-table td { padding: 4px 0; }
-    .cost-table td.val { text-align: right; }
-    .cost-table tr.sep td { border-top: 1px solid var(--border); padding-top: 6px; }
-    .cost-table tr.total td { font-weight: 600; color: var(--accent); }
-
-    .progress {
-      height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 6px;
+    .metric .delta {
+      font-size: 12px;
+      color: var(--fg-dim);
     }
-    .progress > div { height: 100%; background: var(--accent); transition: width .4s ease; }
+    .metric .delta.positive { color: var(--sage); }
+    .metric .delta.negative { color: var(--crimson); }
 
-    .cert-row {
-      display: flex; justify-content: space-between; padding: 5px 0;
-      font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    /* ─── ChartCards row ──────────────────────────────────────────────── */
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .chart {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      min-height: 160px;
+    }
+    .chart .title {
+      font-size: 12px;
+      color: var(--fg-soft);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .chart .hint {
+      font-size: 10px;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+    }
+    .chart svg { display: block; width: 100%; height: 96px; }
+    .chart .empty {
+      color: var(--fg-dim);
+      font-size: 12px;
+      font-style: italic;
+      padding-top: 30px;
+      text-align: center;
+    }
+
+    /* ─── Dual feed ──────────────────────────────────────────────────── */
+    .feeds {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .feed {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px 4px;
+      min-height: 280px;
+    }
+    .feed .head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .feed .head .title {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .feed-item {
+      padding: 10px 2px;
       border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
     }
-    .cert-row .badge.cert { color: var(--green); }
-    .cert-row .badge.cond { color: var(--accent); }
-    .cert-row .badge.rej  { color: #ef4444; }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-item .role {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      background: var(--surface-2);
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .feed-item .msg {
+      color: var(--fg-soft);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .feed-item .ts {
+      font-size: 11px;
+      color: var(--fg-dim);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    .feed-item.fresh { animation: arrive 1s ease-out; }
+    @keyframes arrive {
+      0%   { background: rgba(201, 100, 66, 0.15); }
+      100% { background: transparent; }
+    }
+
+    /* ─── Sidebar: Org tree ──────────────────────────────────────────── */
+    .org-tree { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; }
+    .org-node {
+      padding: 6px 10px;
+      margin: 3px 0;
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .org-node.active { border-color: var(--terracotta); }
+    .org-node .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--fg-dim);
+    }
+    .org-node.active .dot {
+      background: var(--terracotta);
+      box-shadow: 0 0 8px var(--terracotta);
+    }
+    .org-indent { padding-left: 14px; border-left: 1px dashed var(--border); margin-left: 10px; }
+
+    /* ─── Sidebar certifications ─────────────────────────────────────── */
+    .progress { height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+    .progress > div { height: 100%; background: var(--terracotta); transition: width .4s ease; }
+    .share-label { font-size: 11px; color: var(--fg-dim); margin-top: 6px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="title">◆ <span>Conclave</span> Dashboard</div>
-    <div class="live">live</div>
-  </div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">◆</span> Conclave
+      <span class="tag" id="org-name">—</span>
+    </div>
+    <nav>
+      <a class="active" href="#">Overview</a>
+      <a href="#agents">Agents</a>
+      <a href="#trail">Trail</a>
+      <a href="#costs">Costs</a>
+    </nav>
+    <div class="live"><span class="dot"></span><span>Live</span></div>
+  </header>
 
-  <div class="grid">
-    <section class="panel">
-      <h2>Org Graph</h2>
+  <div class="app">
+
+    <aside class="sidebar">
+      <div class="section-label">Organization</div>
       <div id="org-tree">Loading…</div>
-    </section>
 
-    <section class="panel">
-      <h2>Decision Trail</h2>
-      <div class="filter-row" id="filters">
-        <button data-f="all" class="active">All</button>
-        <button data-f="delegation">Delegation</button>
-        <button data-f="handoff">Handoff</button>
-        <button data-f="escalation">Escalation</button>
-        <button data-f="output">Output</button>
+      <div class="section-label" style="margin-top:28px;">Certifications</div>
+      <div class="progress"><div id="cert-bar" style="width:0%"></div></div>
+      <div class="share-label" id="cert-label">—</div>
+    </aside>
+
+    <main class="content">
+
+      <h1 class="section-title serif">Overview</h1>
+      <p class="section-sub">Live state of the deliberating org.</p>
+
+      <!-- Incident banner (hidden by default, wired to policy/budget alerts) -->
+      <div id="incident" class="incident">
+        <span class="badge">Incident</span>
+        <span id="incident-msg">—</span>
       </div>
-      <div class="trail" id="trail">Loading…</div>
-    </section>
 
-    <section class="panel">
-      <h2>Cost &amp; Status</h2>
-      <table class="cost-table" id="cost">
-        <tbody>
-          <tr><td colspan="2" style="color: var(--dim);">Loading…</td></tr>
-        </tbody>
-      </table>
+      <!-- ─── 4 MetricCards (Paperclip-style) ─────────────────────────── -->
+      <div class="metrics">
+        <div class="metric">
+          <div class="label">Agents</div>
+          <div class="value" id="m-agents">—</div>
+          <div class="delta" id="m-agents-d">in this org</div>
+        </div>
+        <div class="metric">
+          <div class="label">Deliberations · today</div>
+          <div class="value" id="m-delib">—</div>
+          <div class="delta" id="m-delib-d">trails written</div>
+        </div>
+        <div class="metric">
+          <div class="label">Spend · today</div>
+          <div class="value" id="m-cost">$0<span class="unit">.00</span></div>
+          <div class="delta" id="m-cost-d">against baseline</div>
+        </div>
+        <div class="metric">
+          <div class="label">Routing savings</div>
+          <div class="value" id="m-savings">0<span class="unit">%</span></div>
+          <div class="delta positive" id="m-savings-d">vs all-Sonnet</div>
+        </div>
+      </div>
 
-      <h2 style="margin-top: 20px;">Certified workload share</h2>
-      <div class="progress"><div id="share" style="width: 0%"></div></div>
-      <div id="share-label" style="font-size: 11px; color: var(--dim); margin-top: 4px;">—</div>
+      <!-- ─── 4 ChartCards (14d) ──────────────────────────────────────── -->
+      <div class="charts">
+        <div class="chart">
+          <div class="title">Run activity</div>
+          <div class="hint">last 14 days</div>
+          <svg id="c-activity" viewBox="0 0 200 96" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="chart">
+          <div class="title">Handoffs by type</div>
+          <div class="hint">14 days</div>
+          <svg id="c-handoffs" viewBox="0 0 200 96" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="chart">
+          <div class="title">Cost by role</div>
+          <div class="hint">14 days</div>
+          <svg id="c-cost" viewBox="0 0 200 96" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="chart">
+          <div class="title">Model routing</div>
+          <div class="hint">haiku · sonnet · opus</div>
+          <svg id="c-routing" viewBox="0 0 200 96" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
 
-      <h2 style="margin-top: 20px;">Certifications</h2>
-      <div id="certs">—</div>
-    </section>
+      <!-- ─── Dual feed: live activity + recent outputs ──────────────── -->
+      <div class="feeds">
+        <section class="feed" id="activity-feed">
+          <div class="head">
+            <span class="title serif">Recent activity</span>
+            <span class="live"><span class="dot"></span><span>Streaming</span></span>
+          </div>
+          <div id="activity-list">Loading…</div>
+        </section>
+        <section class="feed">
+          <div class="head">
+            <span class="title serif">Recent outputs</span>
+          </div>
+          <div id="tasks-list">Loading…</div>
+        </section>
+      </div>
+
+    </main>
   </div>
 
 <script>
-const ROLE_COLORS = ['var(--role-1)','var(--role-2)','var(--role-3)','var(--role-4)'];
-const state = { roleColor: {}, filter: 'all', activeRoles: new Set() };
+const ROLE_COLORS = ['var(--role-1)','var(--role-2)','var(--role-3)','var(--role-4)','var(--role-5)'];
+const state = { roleColor: {} };
 
 async function fetchJSON(url) {
   const r = await fetch(url);
   return r.json();
 }
 
-function renderOrg(org) {
+function formatTs(ts) {
+  if (!ts) return '';
+  try {
+    const d = new Date(ts);
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  } catch { return ''; }
+}
+
+function truncate(s, n=80) {
+  if (!s) return '';
+  return s.length > n ? s.slice(0, n-1) + '…' : s;
+}
+
+/* ─── Sidebar: org hierarchy ─────────────────────────────────────── */
+async function renderOrg() {
+  const org = await fetchJSON('/api/org');
+  document.getElementById('org-name').textContent = org.name || '';
   const roles = org.agents.map(a => a.role);
   roles.forEach((r, i) => state.roleColor[r] = ROLE_COLORS[i % ROLE_COLORS.length]);
 
@@ -177,9 +485,8 @@ function renderOrg(org) {
     const kids = byParent[parent] || [];
     for (const a of kids) {
       const color = state.roleColor[a.role];
-      const active = state.activeRoles.has(a.role) ? 'active' : '';
       html.push(`<div class="${depth>0?'org-indent':''}">`);
-      html.push(`<div class="org-node ${active}" data-role="${a.role}">
+      html.push(`<div class="org-node" data-role="${a.role}">
         <span style="color:${color}">${a.role}</span>
         <span class="dot"></span>
       </div>`);
@@ -188,89 +495,183 @@ function renderOrg(org) {
     }
   }
   walk('__root__', 0);
-  document.getElementById('org-tree').innerHTML = html.join('');
+  document.getElementById('org-tree').innerHTML = html.join('') || '<div style="color:var(--fg-dim); font-size:12px;">No agents.</div>';
 }
 
-function renderTrail(entries) {
-  const filtered = state.filter === 'all' ? entries : entries.filter(e => (e.type || '') === state.filter);
-  const html = filtered.map(e => {
-    const fromColor = state.roleColor[e.from] || '#fff';
-    const toColor   = state.roleColor[e.to]   || '#fff';
-    const preview = (e.content || '').slice(0, 500);
-    return `<div class="trail-entry">
-      <div class="ts">${e.ts || ''}</div>
-      <div class="hdr">
-        <span style="color:${fromColor}">${e.from}</span>
-        <span style="color: var(--dim)"> → </span>
-        <span style="color:${toColor}">${e.to}</span>
-        <span style="color: var(--dim); font-weight: 400; margin-left: 8px;">${e.type || ''}</span>
-      </div>
-      <div class="content">${escapeHtml(preview)}</div>
-      ${e.reasoning ? `<div class="reasoning">↳ ${escapeHtml(e.reasoning)}</div>` : ''}
+/* ─── MetricCards ────────────────────────────────────────────────── */
+async function renderMetrics() {
+  const m = await fetchJSON('/api/metrics');
+  document.getElementById('m-agents').textContent = m.agents_total ?? 0;
+  document.getElementById('m-agents-d').textContent = `${m.agents_total === 1 ? 'agent' : 'agents'} in this org`;
+
+  document.getElementById('m-delib').textContent = m.deliberations_today ?? 0;
+  document.getElementById('m-delib-d').textContent = 'trails today';
+
+  const cost = Number(m.cost_today_usd ?? 0);
+  const [dollars, cents] = cost.toFixed(2).split('.');
+  document.getElementById('m-cost').innerHTML = `$${dollars}<span class="unit">.${cents}</span>`;
+  const baseline = Number(m.baseline_today_usd ?? 0);
+  document.getElementById('m-cost-d').textContent = baseline > 0
+    ? `baseline $${baseline.toFixed(2)}` : 'no activity yet';
+
+  const s = Number(m.savings_pct ?? 0);
+  document.getElementById('m-savings').innerHTML = `${s.toFixed(1)}<span class="unit">%</span>`;
+  const savingsEl = document.getElementById('m-savings-d');
+  savingsEl.textContent = 'vs all-Sonnet baseline';
+  savingsEl.className = 'delta ' + (s > 0 ? 'positive' : s < 0 ? 'negative' : '');
+}
+
+/* ─── Charts (pure SVG) ─────────────────────────────────────────── */
+function drawArea(svgId, points) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  if (!points.length) {
+    svg.outerHTML = `<div class="empty">no data yet</div>`;
+    return;
+  }
+  const W = 200, H = 96, P = 6;
+  const max = Math.max(1, ...points.map(p => p.v));
+  const step = (W - 2*P) / Math.max(1, points.length - 1);
+  const coords = points.map((p, i) => [P + i*step, H - P - (p.v/max) * (H - 2*P)]);
+  const line = coords.map(([x,y], i) => (i===0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1)).join(' ');
+  const area = line + ` L ${W-P} ${H-P} L ${P} ${H-P} Z`;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="g-${svgId}" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%" stop-color="var(--terracotta)" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="var(--terracotta)" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${area}" fill="url(#g-${svgId})"/>
+    <path d="${line}" fill="none" stroke="var(--terracotta)" stroke-width="1.5"/>
+  `;
+}
+
+function drawBars(svgId, rows, valueKey, labelKey) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  if (!rows.length) {
+    svg.outerHTML = `<div class="empty">no data yet</div>`;
+    return;
+  }
+  const W = 200, H = 96, P = 6;
+  const max = Math.max(1, ...rows.map(r => r[valueKey]));
+  const bw = (W - 2*P) / rows.length - 2;
+  let x = P;
+  const out = [];
+  rows.forEach(r => {
+    const h = (r[valueKey] / max) * (H - 2*P);
+    out.push(`<rect x="${x}" y="${H-P-h}" width="${bw}" height="${h}"
+              fill="var(--terracotta)" opacity="0.8" rx="2"/>`);
+    out.push(`<text x="${x + bw/2}" y="${H-1}" text-anchor="middle"
+              font-size="7" fill="var(--fg-dim)" font-family="JetBrains Mono">${(r[labelKey] || '').slice(0,6)}</text>`);
+    x += bw + 2;
+  });
+  svg.innerHTML = out.join('');
+}
+
+function drawStacked(svgId, rows) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  if (!rows.length) {
+    svg.outerHTML = `<div class="empty">no data yet</div>`;
+    return;
+  }
+  const W = 200, H = 60;
+  const colors = { haiku: 'var(--sage)', sonnet: 'var(--terracotta)', opus: 'var(--coral)' };
+  const total = rows.reduce((s, r) => s + r.count, 0) || 1;
+  let x = 0;
+  const out = [];
+  const legend = [];
+  rows.forEach(r => {
+    const w = (r.count / total) * W;
+    const c = colors[r.tier] || 'var(--fg-dim)';
+    out.push(`<rect x="${x}" y="12" width="${w}" height="${H-18}" fill="${c}"/>`);
+    legend.push(`<text x="${x + 2}" y="84" font-size="8" fill="var(--fg-soft)" font-family="JetBrains Mono">${r.tier} ${Math.round(r.count/total*100)}%</text>`);
+    x += w;
+  });
+  svg.innerHTML = out.join('') + legend.join('');
+}
+
+async function renderCharts() {
+  const c = await fetchJSON('/api/charts');
+  drawArea('c-activity', c.activity_14d.map(d => ({ v: d.count })));
+  drawBars('c-handoffs', c.handoffs, 'count', 'type');
+  drawBars('c-cost', c.cost_by_role.slice(0, 5), 'cost_usd', 'role');
+  drawStacked('c-routing', c.routing_split);
+}
+
+/* ─── Feeds ──────────────────────────────────────────────────────── */
+function renderFeed(rootId, entries) {
+  if (!entries.length) {
+    document.getElementById(rootId).innerHTML = '<div style="color:var(--fg-dim);font-size:12px;padding:12px 0;">No activity yet.</div>';
+    return;
+  }
+  document.getElementById(rootId).innerHTML = entries.map(e => {
+    const from = e.from || e.role || '—';
+    const color = state.roleColor[from] || 'var(--fg-soft)';
+    const content = e.content || e.output || e.reasoning || e.type || '';
+    return `<div class="feed-item">
+      <span class="role" style="color:${color}">${from}</span>
+      <span class="msg">${truncate(content, 100)}</span>
+      <span class="ts">${formatTs(e.ts)}</span>
     </div>`;
   }).join('');
-  document.getElementById('trail').innerHTML = html || '<div style="color: var(--dim); font-size: 12px;">No trail yet. Run: conclave run "your goal" --dry-run</div>';
-  document.getElementById('trail').scrollTop = 99999;
 }
 
-function escapeHtml(s) {
-  return (s||'').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;" }[c]));
+async function renderActivity() {
+  const a = await fetchJSON('/api/activity');
+  renderFeed('activity-list', a.activity);
+  renderFeed('tasks-list', a.tasks);
 }
 
-function renderStatus(s) {
-  const haiku = 0, sonnet = 0; // placeholder — token-level breakdown needs richer trail format
-  const html = `
-    <tr><td>Haiku</td><td class="val">$${haiku.toFixed(4)}</td></tr>
-    <tr><td>Sonnet</td><td class="val">$${sonnet.toFixed(4)}</td></tr>
-    <tr class="sep total"><td>Total</td><td class="val">$${s.total_cost_usd.toFixed(4)}</td></tr>
-    <tr><td style="color: var(--dim)">Baseline (all-Sonnet)</td><td class="val" style="color: var(--dim)">$${s.baseline_cost_usd.toFixed(4)}</td></tr>
-    <tr><td style="color: var(--green)">Saved</td><td class="val" style="color: var(--green)">${s.savings_pct.toFixed(1)}%</td></tr>
-  `;
-  document.getElementById('cost').querySelector('tbody').innerHTML = html;
-
-  document.getElementById('share').style.width = `${s.certified_share_pct}%`;
-  document.getElementById('share-label').innerText = `${s.certified_share_pct}% of task types certified`;
-
+/* ─── Status / sidebar certs ─────────────────────────────────────── */
+async function renderStatus() {
+  const s = await fetchJSON('/api/status');
+  const share = s.certified_share_pct || 0;
+  document.getElementById('cert-bar').style.width = share + '%';
   const certs = s.certifications || [];
-  document.getElementById('certs').innerHTML = certs.length
-    ? certs.map(c => `<div class="cert-row">
-        <span>${c.role || ''} / ${c.task_type || ''}</span>
-        <span class="badge ${c.status==='certified'?'cert':c.status==='conditional'?'cond':'rej'}">${
-          c.status==='certified'?'✓':c.status==='conditional'?'~':'✗'
-        } ${(c.status||'').toUpperCase()}</span>
-      </div>`).join('')
-    : '<div style="color: var(--dim); font-size: 11px;">No certifications yet. Run: conclave simulate &amp;&amp; conclave certify</div>';
+  document.getElementById('cert-label').textContent =
+    certs.length ? `${share}% certified · ${certs.length} policies` : 'No policies yet';
 }
 
-async function refresh() {
+/* ─── SSE: prepend new activity items ─────────────────────────────── */
+function subscribe() {
   try {
-    const [org, trail, status] = await Promise.all([
-      fetchJSON('/api/org'),
-      fetchJSON('/api/trail'),
-      fetchJSON('/api/status'),
-    ]);
-    state.activeRoles = new Set(trail.trail.map(e => e.from));
-    renderOrg(org);
-    renderTrail(trail.trail);
-    renderStatus(status);
-  } catch (e) { console.error(e); }
+    const es = new EventSource('/api/events');
+    es.onmessage = (ev) => {
+      try {
+        const entry = JSON.parse(ev.data);
+        const root = document.getElementById('activity-list');
+        const from = entry.from || entry.role || '—';
+        const color = state.roleColor[from] || 'var(--fg-soft)';
+        const content = entry.content || entry.output || entry.reasoning || entry.type || '';
+        const node = document.createElement('div');
+        node.className = 'feed-item fresh';
+        node.innerHTML = `
+          <span class="role" style="color:${color}">${from}</span>
+          <span class="msg">${truncate(content, 100)}</span>
+          <span class="ts">${formatTs(entry.ts)}</span>
+        `;
+        if (root.firstChild) root.insertBefore(node, root.firstChild);
+        else root.appendChild(node);
+        // Trim to 12 items
+        while (root.childElementCount > 12) root.removeChild(root.lastChild);
+      } catch {}
+    };
+  } catch (e) { /* no SSE available */ }
 }
 
-document.getElementById('filters').addEventListener('click', (e) => {
-  const btn = e.target.closest('button'); if (!btn) return;
-  state.filter = btn.dataset.f;
-  for (const b of e.currentTarget.querySelectorAll('button')) b.classList.toggle('active', b === btn);
-  refresh();
-});
-
-refresh();
-setInterval(refresh, 2000);
-
-// SSE for real-time entries
-try {
-  const ev = new EventSource('/api/events');
-  ev.onmessage = () => refresh();
-} catch (e) { /* SSE optional */ }
+/* ─── Boot ───────────────────────────────────────────────────────── */
+(async function () {
+  await renderOrg();
+  await Promise.all([renderMetrics(), renderCharts(), renderActivity(), renderStatus()]);
+  subscribe();
+  // Periodic polling as a safety net alongside SSE
+  setInterval(renderMetrics, 10_000);
+  setInterval(renderCharts, 30_000);
+  setInterval(renderStatus, 15_000);
+})();
 </script>
 </body>
 </html>

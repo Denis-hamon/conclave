@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **Dashboard v2** — full control-plane UI built on the Claude / Anthropic design system (see `dashboard-ui/DESIGN.md`). Adds:
+  - Top-line **MetricCards** (agents, deliberations today, spend, routing savings).
+  - 14-day **ChartCards** (run activity, handoff types, cost by role, model routing split).
+  - Dual **feed** (live activity stream via SSE + recent outputs).
+  - Warm-toned dark theme (terracotta brand, parchment-on-dark text, serif headlines).
+- `dashboard-ui/DESIGN.md` generated via `npx getdesign add claude` — source of truth for future React rewrite.
+- New backend endpoints: `/api/metrics`, `/api/charts`, `/api/activity`.
 - `ConclaveBus`, `ConclaveAgent`, `CostMeter`, `TaskRouter`, `load_org` and friends are now direct imports from the top-level `conclave` package, with an explicit `__all__`.
 - `conclave/py.typed` marker — downstream projects now benefit from the package's type hints.
 - `benchmarks/run.py` + `benchmarks/README.md` — reproducible regeneration of `benchmarks/results.json` for CI or scripted runs.
