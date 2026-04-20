@@ -198,6 +198,14 @@ Every action is logged with full provenance:
 
 Human-readable audit. Replayable. Debuggable.
 
+Render any trail as a Mermaid `sequenceDiagram` — renders natively on GitHub, Notion, Obsidian:
+
+```bash
+conclave trail view --latest                   # Mermaid (default)
+conclave trail view --latest --format timeline # ASCII timeline
+conclave trail view .conclave/trail.jsonl > trail.md
+```
+
 ---
 
 ## Deliberation modes
@@ -233,10 +241,11 @@ Conclave agents use the same MCP servers as Claude Code and CoWork:
 ## Org templates
 
 ```bash
-conclave init --template startup-5         # CEO, CPO, TechLead, Designer, QA
-conclave init --template product-squad     # CPO, PM, TechLead, QA
-conclave init --template growth-squad      # CMO, Growth, Designer, Analyst
-conclave init --template creative-agency   # CD, Copywriter, Art Director, PM
+conclave init --template startup-5          # CEO, CPO, TechLead, Designer, QA
+conclave init --template product-squad      # CPO, PM, TechLead, QA
+conclave init --template growth-squad       # CMO, Growth, Designer, Analyst
+conclave init --template creative-agency    # CD, Copywriter, Art Director, PM
+conclave init --template claude-code-squad  # Planner, Implementer, Reviewer, Tester
 ```
 
 ---

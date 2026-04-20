@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **`conclave trail view`** — render a Decision Trail as a Mermaid `sequenceDiagram` (default) or ASCII timeline. The diagram renders natively on GitHub, Notion, Obsidian, making the JSONL audit log instantly diffable and shareable. `--latest` picks the newest trail in `.conclave/` automatically.
+- **`claude-code-squad` org template** — Planner / Implementer / Reviewer / Tester, with personas written for devs using Claude Code. Available via `conclave init --template claude-code-squad` and as `examples/claude_code_squad.yml`.
+- 6 unit tests covering trail → Mermaid rendering, content sanitization, empty-trail handling, and ASCII timeline output.
 - **Dashboard v2** — full control-plane UI built on the Claude / Anthropic design system (see `dashboard-ui/DESIGN.md`). Adds:
   - Top-line **MetricCards** (agents, deliberations today, spend, routing savings).
   - 14-day **ChartCards** (run activity, handoff types, cost by role, model routing split).

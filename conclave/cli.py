@@ -86,7 +86,15 @@ def run(goal, org, deliberation, max_turns, trail_dir, dry_run):
 @click.option(
     "--template",
     default="product-squad",
-    type=click.Choice(["startup-5", "product-squad", "growth-squad", "creative-agency"]),
+    type=click.Choice(
+        [
+            "startup-5",
+            "product-squad",
+            "growth-squad",
+            "creative-agency",
+            "claude-code-squad",
+        ]
+    ),
 )
 def init(template):
     """Initialize a conclave.yml from a template."""
@@ -95,6 +103,7 @@ def init(template):
         "startup-5": _startup_5(),
         "growth-squad": _growth_squad(),
         "creative-agency": _creative_agency(),
+        "claude-code-squad": _claude_code_squad(),
     }
     out = Path("conclave.yml")
     if out.exists():
@@ -417,6 +426,50 @@ def _creative_agency():
 """
 
 
+def _claude_code_squad():
+    return """org:
+  name: "Claude Code Squad"
+  deliberation: hierarchy
+
+  agents:
+    - role: Planner
+      persona: |
+        Breaks ambiguous goals into atomic, verifiable tasks before any code is written.
+        Always writes the task list as bullets, never as prose. Challenges scope creep
+        on the spot. Refuses to delegate anything vaguer than "change X in file Y so
+        that Z holds." Owns the definition of done.
+      tools: [github, linear]
+      force_model: claude-sonnet-4-6
+
+    - role: Implementer
+      persona: |
+        Writes the smallest possible change that passes the tests. Reads the file
+        before editing it. Never introduces a new dependency without flagging it.
+        Prefers explicit over clever. Hands off to Reviewer the moment the
+        implementation compiles and its own smoke test passes.
+      reports_to: Planner
+      tools: [github]
+      executor: deepagents
+
+    - role: Reviewer
+      persona: |
+        Reads the diff line by line. Flags silent failure modes, missing edge cases,
+        and anything that looks like a workaround rather than a fix. Will not approve
+        until the why of each change is justified in the commit message. Treats
+        "it works on my machine" as an escalation.
+      reports_to: Planner
+      tools: [github]
+
+    - role: Tester
+      persona: |
+        Writes the tests the Implementer forgot. Thinks adversarially — what input
+        would break this? Blocks merge on any regression. Prefers one targeted test
+        over three broad ones. Always reports the coverage delta.
+      reports_to: Reviewer
+      tools: [github, browserbase]
+"""
+
+
 # ─── BENCHMARK ────────────────────────────────────────────────────────────────
 
 
@@ -510,6 +563,49 @@ def dashboard(org, trail_dir, port, host, no_open):
             pass
 
     uvicorn.run(app, host=host, port=port, log_level="warning")
+
+
+# ─── TRAIL ────────────────────────────────────────────────────────────────────
+
+
+@cli.group()
+def trail():
+    """Inspect Decision Trail files."""
+    pass
+
+
+@trail.command("view")
+@click.argument("trail_file", type=click.Path(exists=True, dir_okay=False), required=False)
+@click.option("--latest", is_flag=True, default=False, help="Pick the newest trail in --trail-dir.")
+@click.option("--trail-dir", default=".conclave", show_default=True)
+@click.option(
+    "--format",
+    "fmt",
+    type=click.Choice(["mermaid", "timeline"]),
+    default="mermaid",
+    show_default=True,
+    help="Mermaid sequenceDiagram (default) or ASCII timeline.",
+)
+@click.option("--title", default=None, help="Optional title rendered inside the diagram.")
+def trail_view(trail_file, latest, trail_dir, fmt, title):
+    """Render a trail as a Mermaid sequenceDiagram or ASCII timeline."""
+    from .trail_view import latest_trail, load_trail, to_mermaid, to_timeline
+
+    if trail_file:
+        path = Path(trail_file)
+    elif latest:
+        picked = latest_trail(Path(trail_dir))
+        if not picked:
+            raise click.ClickException(f"No trail file found in {trail_dir}.")
+        path = picked
+    else:
+        raise click.UsageError("Pass a trail file path or --latest.")
+
+    entries = load_trail(path)
+    if fmt == "timeline":
+        click.echo(to_timeline(entries))
+    else:
+        click.echo(to_mermaid(entries, title=title))
 
 
 if __name__ == "__main__":
