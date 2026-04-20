@@ -140,14 +140,88 @@
     }
     .hero-art svg { width: 100%; height: 100%; display: block; }
 
-    /* Respect prefers-reduced-motion: freeze SMIL animations in the hero. */
+    /* ------- Hero terminal overlay (typewriter) ------- */
+    .hero-art { isolation: isolate; }
+    .hero-bg  { position: absolute; inset: 0; z-index: 0; }
+    .hero-term {
+      position: absolute;
+      inset: 8% 5% 14% 5%;
+      z-index: 2;
+      background: #141413;
+      border-radius: 12px;
+      border: 1px solid rgba(20,20,19,0.14);
+      box-shadow:
+        0 28px 64px -18px rgba(20,20,19,0.30),
+        0 0 0 1px rgba(255,255,255,0.04) inset;
+      overflow: hidden;
+      font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #E8E4D9;
+      display: flex; flex-direction: column;
+    }
+    .hero-term .bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.035);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .hero-term .bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .hero-term .bar .dot.r { background: #ed6c60; }
+    .hero-term .bar .dot.y { background: #f7c151; }
+    .hero-term .bar .dot.g { background: #78c25a; }
+    .hero-term .bar .title {
+      margin-left: auto; margin-right: 6px;
+      font-size: 11px; color: #97948E; letter-spacing: 0.04em;
+    }
+    .hero-term .body {
+      padding: 16px 18px; flex: 1;
+      overflow: hidden; position: relative;
+    }
+    .hero-term .line {
+      opacity: 0;
+      transform: translateY(3px);
+      animation: hero-reveal 14s infinite ease-out;
+      animation-delay: calc(var(--i, 0) * 0.55s);
+      white-space: pre;
+    }
+    .hero-term .line.gap { height: 0.55em; }
+
+    .hero-term .t-dim    { color: #6A6863; }
+    .hero-term .t-accent { color: #E09274; }
+    .hero-term .t-green  { color: #9CB47C; }
+    .hero-term .t-yellow { color: #DCB464; }
+    .hero-term .t-purple { color: #B8A4D4; }
+    .hero-term .t-cpo    { color: #E09274; font-weight: 500; }
+    .hero-term .t-tl     { color: #9CB47C; font-weight: 500; }
+    .hero-term .t-qa     { color: #B8A4D4; font-weight: 500; }
+
+    .hero-term .cursor {
+      display: inline-block; width: 7px; height: 1em;
+      background: #E09274; vertical-align: text-bottom;
+      animation: hero-cursor 1.05s infinite steps(2, end);
+    }
+
+    @keyframes hero-reveal {
+      0%   { opacity: 0; transform: translateY(3px); }
+      3%   { opacity: 1; transform: translateY(0); }
+      92%  { opacity: 1; }
+      97%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    @keyframes hero-cursor {
+      0%, 50% { opacity: 1; }
+      50.01%, 100% { opacity: 0; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-      .hero-svg * {
-        animation: none !important;
-      }
+      .hero-svg * { animation: none !important; }
       .hero-svg animate,
       .hero-svg animateMotion,
       .hero-svg animateTransform { display: none; }
+      .hero-term .line,
+      .hero-term .cursor { animation: none !important; opacity: 1; transform: none; }
     }
     .eyebrow {
       font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -428,7 +502,7 @@
 
       <!-- Right: editorial illustration -->
       <div class="hero-art" aria-hidden="true">
-        <svg viewBox="0 0 520 540" xmlns="http://www.w3.org/2000/svg" class="hero-svg">
+        <svg class="hero-svg hero-bg" viewBox="0 0 520 540" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="h-glow" cx="50%" cy="48%" r="55%">
               <stop offset="0%"  stop-color="#CC785C" stop-opacity="0.42"/>
@@ -446,141 +520,18 @@
             <symbol id="spark" viewBox="-12 -12 24 24">
               <path d="M0,-12 L1.8,-1.8 L12,0 L1.8,1.8 L0,12 L-1.8,1.8 L-12,0 L-1.8,-1.8 Z" fill="currentColor"/>
             </symbol>
-            <!-- Motion paths for message pulses -->
-            <path id="line-cpo" d="M260,260 L260,92"  fill="none"/>
-            <path id="line-tl"  d="M260,260 L430,262" fill="none"/>
-            <path id="line-qa"  d="M260,260 L178,446" fill="none"/>
           </defs>
 
-          <!-- Breathing halo -->
-          <circle cx="260" cy="260" r="260" fill="url(#h-glow)">
+          <!-- Breathing halo (left+bottom) -->
+          <circle cx="160" cy="320" r="280" fill="url(#h-glow)">
             <animate attributeName="opacity" values="0.75;1;0.75" dur="4.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="400" cy="180" r="200" fill="url(#h-glow)" opacity="0.7">
+            <animate attributeName="opacity" values="0.55;0.85;0.55" dur="5.4s" repeatCount="indefinite" begin="1s"/>
           </circle>
 
           <!-- Grain overlay -->
           <rect x="0" y="0" width="520" height="540" filter="url(#h-noise)" opacity="0.5"/>
-
-          <!-- Concentric rings, counter-rotating -->
-          <g>
-            <circle cx="260" cy="260" r="96"  fill="none" stroke="rgba(20,20,19,0.18)" stroke-width="1" stroke-dasharray="1 5">
-              <animateTransform attributeName="transform" type="rotate"
-                                from="0 260 260" to="360 260 260"
-                                dur="38s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="260" cy="260" r="156" fill="none" stroke="rgba(20,20,19,0.13)" stroke-width="1" stroke-dasharray="1 5">
-              <animateTransform attributeName="transform" type="rotate"
-                                from="360 260 260" to="0 260 260"
-                                dur="52s" repeatCount="indefinite"/>
-            </circle>
-            <circle cx="260" cy="260" r="218" fill="none" stroke="rgba(20,20,19,0.09)" stroke-width="1" stroke-dasharray="1 5">
-              <animateTransform attributeName="transform" type="rotate"
-                                from="0 260 260" to="360 260 260"
-                                dur="68s" repeatCount="indefinite"/>
-            </circle>
-          </g>
-
-          <!-- Static connection paths (visible dotted) -->
-          <g stroke="rgba(20,20,19,0.18)" stroke-width="1" stroke-dasharray="2 4" fill="none">
-            <use href="#line-cpo"/>
-            <use href="#line-tl"/>
-            <use href="#line-qa"/>
-          </g>
-
-          <!-- Central sparkle — slow spin + nucleus pulse -->
-          <g transform="translate(260 260)">
-            <g>
-              <animateTransform attributeName="transform" type="rotate"
-                                from="0" to="360"
-                                dur="90s" repeatCount="indefinite"/>
-              <path d="M0,-92 L12,-12 L92,0 L12,12 L0,92 L-12,12 L-92,0 L-12,-12 Z" fill="url(#h-spark)">
-                <animate attributeName="opacity" values="0.92;1;0.92" dur="3.6s" repeatCount="indefinite"/>
-              </path>
-              <path d="M0,-64 L8,-8 L64,0 L8,8 L0,64 L-8,8 L-64,0 L-8,-8 Z"
-                    fill="#FAF9F5" opacity="0.9" transform="rotate(45)"/>
-            </g>
-            <circle r="10" fill="#141413">
-              <animate attributeName="r" values="9;12;9" dur="2.8s" repeatCount="indefinite"/>
-            </circle>
-          </g>
-
-          <!-- Role chips (stroke accents sync to pulse arrivals) -->
-          <g font-family="'Switzer', sans-serif">
-            <!-- CPO (top) -->
-            <g transform="translate(194 74)">
-              <rect x="0" y="0" width="132" height="36" rx="18"
-                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)" stroke-width="1">
-                <animate attributeName="stroke" dur="9s" repeatCount="indefinite"
-                         keyTimes="0;0.16;0.22;0.32;1"
-                         values="rgba(20,20,19,0.16);#CC785C;#CC785C;rgba(20,20,19,0.16);rgba(20,20,19,0.16)"/>
-                <animate attributeName="stroke-width" dur="9s" repeatCount="indefinite"
-                         keyTimes="0;0.16;0.22;0.32;1"
-                         values="1;1.8;1.8;1;1"/>
-              </rect>
-              <circle cx="16" cy="18" r="4" fill="#CC785C"/>
-              <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">CPO</text>
-              <text x="58" y="22" font-size="11.5" fill="#6A6863">· Sonnet</text>
-            </g>
-            <!-- TechLead (right) -->
-            <g transform="translate(370 244)">
-              <rect x="0" y="0" width="138" height="36" rx="18"
-                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)" stroke-width="1">
-                <animate attributeName="stroke" dur="9s" repeatCount="indefinite"
-                         keyTimes="0;0.48;0.54;0.64;1"
-                         values="rgba(20,20,19,0.16);#9CB47C;#9CB47C;rgba(20,20,19,0.16);rgba(20,20,19,0.16)"/>
-                <animate attributeName="stroke-width" dur="9s" repeatCount="indefinite"
-                         keyTimes="0;0.48;0.54;0.64;1"
-                         values="1;1.8;1.8;1;1"/>
-              </rect>
-              <circle cx="16" cy="18" r="4" fill="#9CB47C"/>
-              <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">TechLead</text>
-              <text x="92" y="22" font-size="11.5" fill="#6A6863">· Haiku</text>
-            </g>
-            <!-- QA (bottom-left) -->
-            <g transform="translate(96 428)">
-              <rect x="0" y="0" width="164" height="36" rx="18"
-                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)" stroke-width="1">
-                <animate attributeName="stroke" dur="9s" repeatCount="indefinite"
-                         keyTimes="0;0.80;0.86;0.96;1"
-                         values="rgba(20,20,19,0.16);#8B7FB8;#8B7FB8;rgba(20,20,19,0.16);rgba(20,20,19,0.16)"/>
-                <animate attributeName="stroke-width" dur="9s" repeatCount="indefinite"
-                         keyTimes="0;0.80;0.86;0.96;1"
-                         values="1;1.8;1.8;1;1"/>
-              </rect>
-              <circle cx="16" cy="18" r="4" fill="#8B7FB8"/>
-              <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">QA_Engineer</text>
-              <text x="118" y="22" font-size="11.5" fill="#6A6863">· Haiku</text>
-            </g>
-          </g>
-
-          <!-- Message pulses: three dots circling center → chip → center -->
-          <!-- Total cycle: 9s. Each pulse fires once per cycle, staggered by 3s. -->
-          <!-- Pulse 1 — CPO (coral) -->
-          <circle r="6" fill="#CC785C" opacity="0">
-            <animateMotion dur="9s" repeatCount="indefinite" begin="0s" rotate="auto">
-              <mpath href="#line-cpo"/>
-            </animateMotion>
-            <animate attributeName="opacity" dur="9s" repeatCount="indefinite" begin="0s"
-                     keyTimes="0;0.02;0.17;0.19;1"
-                     values="0;1;1;0;0"/>
-          </circle>
-          <!-- Pulse 2 — TechLead (green) -->
-          <circle r="6" fill="#9CB47C" opacity="0">
-            <animateMotion dur="9s" repeatCount="indefinite" begin="3s" rotate="auto">
-              <mpath href="#line-tl"/>
-            </animateMotion>
-            <animate attributeName="opacity" dur="9s" repeatCount="indefinite" begin="3s"
-                     keyTimes="0;0.02;0.17;0.19;1"
-                     values="0;1;1;0;0"/>
-          </circle>
-          <!-- Pulse 3 — QA (purple) -->
-          <circle r="6" fill="#8B7FB8" opacity="0">
-            <animateMotion dur="9s" repeatCount="indefinite" begin="6s" rotate="auto">
-              <mpath href="#line-qa"/>
-            </animateMotion>
-            <animate attributeName="opacity" dur="9s" repeatCount="indefinite" begin="6s"
-                     keyTimes="0;0.02;0.17;0.19;1"
-                     values="0;1;1;0;0"/>
-          </circle>
 
           <!-- Twinkling scattered sparkles — staggered rhythms -->
           <g color="#CC785C">
@@ -609,24 +560,41 @@
             </use>
           </g>
 
-          <!-- LIVE indicator — top-right badge -->
-          <g transform="translate(394 18)" font-family="'Switzer', sans-serif">
-            <rect x="0" y="0" width="110" height="24" rx="12"
-                  fill="#FAF9F5" stroke="rgba(20,20,19,0.12)"/>
-            <circle cx="13" cy="12" r="3.5" fill="#9CB47C">
-              <animate attributeName="opacity" values="1;0.25;1" dur="1.3s" repeatCount="indefinite"/>
-              <animate attributeName="r" values="3.5;4.5;3.5" dur="1.3s" repeatCount="indefinite"/>
-            </circle>
-            <text x="24" y="16" font-size="10" font-weight="500" fill="#141413" letter-spacing="1.3">DELIBERATING</text>
-          </g>
-
           <!-- Tagline -->
           <g font-family="'Switzer', sans-serif" fill="#6A6863">
-            <text x="260" y="506" font-size="11" letter-spacing="0.14em" text-anchor="middle">
+            <text x="260" y="522" font-size="11" letter-spacing="0.14em" text-anchor="middle">
               ONE GOAL · THREE ROLES · ONE DECISION TRAIL
             </text>
           </g>
         </svg>
+
+        <!-- Terminal overlay (typewriter) -->
+        <div class="hero-term">
+          <div class="bar">
+            <span class="dot r"></span>
+            <span class="dot y"></span>
+            <span class="dot g"></span>
+            <span class="title">conclave · dry-run</span>
+          </div>
+          <div class="body">
+            <div class="line t-dim"  style="--i: 0">$ conclave run "Spec the checkout API" --dry-run</div>
+            <div class="line gap"    style="--i: 1"></div>
+            <div class="line t-yellow" style="--i: 2">⚠  DRY RUN — no API calls made</div>
+            <div class="line gap"    style="--i: 3"></div>
+            <div class="line"        style="--i: 4"><span class="t-dim">  [user]</span>     → <span class="t-cpo">[CPO]</span></div>
+            <div class="line t-dim"  style="--i: 5">    Spec the checkout API</div>
+            <div class="line gap"    style="--i: 6"></div>
+            <div class="line"        style="--i: 7"><span class="t-cpo">  [CPO]</span>      → <span class="t-tl">[TechLead]</span></div>
+            <div class="line t-dim"  style="--i: 8">    Scope: auth, idempotency, rollback.</div>
+            <div class="line gap"    style="--i: 9"></div>
+            <div class="line"        style="--i: 10"><span class="t-tl">  [TechLead]</span> → <span class="t-qa">[QA]</span></div>
+            <div class="line t-dim"  style="--i: 11">    Prioritize payment edge cases.</div>
+            <div class="line gap"    style="--i: 12"></div>
+            <div class="line t-green" style="--i: 13">  ✓ Output from QA<span class="cursor"></span></div>
+            <div class="line gap"    style="--i: 14"></div>
+            <div class="line"        style="--i: 15"><span class="t-dim">  BASELINE</span>  <span class="t-dim">$0.0159</span>   ·   <span class="t-accent">SAVED  37 %</span></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -833,11 +801,12 @@
         <line x1="900" y1="336" x2="1050" y2="336" stroke="rgba(20,20,19,0.10)" />
         <text x="975" y="354" class="a-sub" text-anchor="middle">Haiku · Sonnet · Opus</text>
 
-        <!-- Arrows -->
+        <!-- Arrows — exit the runtime box cleanly at its right edge (x=830),
+             land on the left edge of each primitive (x=880), exact vertical centers -->
         <path d="M190,230 L250,230" class="a-line" marker-end="url(#arr)" />
-        <path d="M800,123 C 840,123 840,123 880,123" class="a-line" marker-end="url(#arr)" />
-        <path d="M800,229 C 840,229 840,229 880,229" class="a-line" marker-end="url(#arr)" />
-        <path d="M800,343 C 840,343 840,343 880,335" class="a-line" marker-end="url(#arr)" />
+        <path d="M830,123 L880,123" class="a-line" marker-end="url(#arr)" />
+        <path d="M830,229 L880,229" class="a-line" marker-end="url(#arr)" />
+        <path d="M830,335 L880,335" class="a-line" marker-end="url(#arr)" />
       </svg>
       <p class="diagram-caption">
         Figure 1 — YAML configuration is the only input. The runtime coordinates agents, logs every decision, and calls Anthropic primitives through a swappable backend.
@@ -894,10 +863,10 @@
         <text x="395" y="194" class="r-tag" text-anchor="middle">novelty · complexity</text>
         <text x="395" y="212" class="r-tag" text-anchor="middle">is_repetitive · needs_fs</text>
 
-        <!-- Branches labels -->
-        <text x="610" y="95"  class="r-sub" text-anchor="middle" style="font-family:'IBM Plex Mono', monospace;">novelty low</text>
-        <text x="610" y="175" class="r-sub" text-anchor="middle" style="font-family:'IBM Plex Mono', monospace;">novelty high</text>
-        <text x="610" y="255" class="r-sub" text-anchor="middle" style="font-family:'IBM Plex Mono', monospace;">explicit force_model</text>
+        <!-- Branches labels (placed above each curve so they don't overlap the stroke) -->
+        <text x="610" y="68"  class="r-sub" text-anchor="middle" style="font-family:'IBM Plex Mono', monospace;">low novelty · repetitive</text>
+        <text x="610" y="160" class="r-sub" text-anchor="middle" style="font-family:'IBM Plex Mono', monospace;">otherwise (default)</text>
+        <text x="610" y="290" class="r-sub" text-anchor="middle" style="font-family:'IBM Plex Mono', monospace;">force_model: opus</text>
 
         <!-- Haiku -->
         <rect x="720" y="40" width="310" height="84" rx="8" class="r-box haiku" />
@@ -915,11 +884,15 @@
         <text x="875" y="244" class="r-title" text-anchor="middle">Opus (opt-in)</text>
         <text x="875" y="266" class="r-sub"   text-anchor="middle">high-stakes reasoning · legal, strategy, audit</text>
 
-        <!-- Lines -->
+        <!-- Lines: Task → Classifier, then 3 branches exiting the classifier cleanly. -->
+        <!-- Classifier box: x=280..510, y=110..230 (centers 170). Exit each branch from its own y. -->
         <path d="M210,170 L280,170" class="r-line" marker-end="url(#rarr)" />
-        <path d="M510,130 C 600,95 620,85 720,82"  class="r-line" marker-end="url(#rarr)" />
-        <path d="M510,170 C 600,170 620,170 720,170" class="r-line" marker-end="url(#rarr)" />
-        <path d="M510,210 C 600,245 620,250 720,250" class="r-line" marker-end="url(#rarr)" />
+        <!-- Haiku branch: exit classifier top-right (510,125) → Haiku left-center (720,82) -->
+        <path d="M510,125 C 600,110 630,90 720,82"   class="r-line" marker-end="url(#rarr)" />
+        <!-- Sonnet branch: straight middle -->
+        <path d="M510,170 L720,170"                   class="r-line" marker-end="url(#rarr)" />
+        <!-- Opus branch: dashed (less-emphasized, only on explicit override) -->
+        <path d="M510,215 C 600,230 630,250 720,248"  class="r-line" marker-end="url(#rarr)" stroke-dasharray="4 4" />
       </svg>
       <p class="diagram-caption">
         Figure 2 — A task is classified on Haiku, then dispatched. Low-novelty work runs a Haiku self-correction loop; novel work goes to Sonnet; Opus is reserved for explicit, high-stakes domains.
