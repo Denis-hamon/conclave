@@ -52,3 +52,20 @@ Changelog     = "https://github.com/Denis-hamon/conclave/releases"
 
 [tool.hatch.build.targets.wheel]
 packages = ["conclave"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["examples/demo.py", "examples/render_gif.py", "examples/render_demo.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501",  # line too long — handled by formatter where it matters
+    "UP042", # StrEnum requires Python 3.11 str semantics change — keep explicit (str, Enum)
+    "B904",  # exception chaining — cosmetic, not blocking
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "strict"

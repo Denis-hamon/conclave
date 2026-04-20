@@ -31,8 +31,8 @@ Beyond `hierarchy`, `consensus`, and `first-valid` — what other org coordinati
 → Open an issue with the pattern name, a description of when it's useful, and pseudocode.
 
 ### 4. MCP connectors
-Each tool in an agent's `tools:` list maps to an MCP server. Help us expand coverage.  
-→ See `conclave/mcp/` for the connector interface.
+Each tool in an agent's `tools:` list is surfaced to the Claude runtime via MCP. The connector layer is minimal today — help us formalize it.  
+→ Propose a connector spec in an issue, or add a worked YAML example in `examples/` that exercises a new tool.
 
 ## Code contributions
 

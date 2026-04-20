@@ -1,7 +1,6 @@
 # Conclave
 
 ![Tests](https://github.com/Denis-hamon/conclave/actions/workflows/test.yml/badge.svg)
-![PyPI](https://img.shields.io/pypi/v/conclave-agents)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Built on Claude](https://img.shields.io/badge/built%20on-Claude%20Managed%20Agents-orange)
 
@@ -15,9 +14,12 @@ Define your organization in YAML. Give it a goal. Watch your agents deliberate.
 ## Quickstart
 
 ```bash
-pip install conclave-agents
-conclave init --template product-squad
-conclave run "Your goal here" --dry-run   # no API key needed
+# From source (PyPI publish coming)
+git clone https://github.com/Denis-hamon/conclave && cd conclave
+pip install -e ".[dev]"
+
+conclave init --template product-squad        # creates conclave.yml
+conclave run "Your goal here" --dry-run        # no API key needed
 export ANTHROPIC_API_KEY=sk-ant-...
 conclave run "Your goal here"
 ```
