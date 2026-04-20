@@ -139,6 +139,16 @@
       width: 100%;
     }
     .hero-art svg { width: 100%; height: 100%; display: block; }
+
+    /* Respect prefers-reduced-motion: freeze SMIL animations in the hero. */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-svg * {
+        animation: none !important;
+      }
+      .hero-svg animate,
+      .hero-svg animateMotion,
+      .hero-svg animateTransform { display: none; }
+    }
     .eyebrow {
       font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
       color: var(--ink-dim); font-weight: 500; margin-bottom: 28px;
@@ -418,10 +428,10 @@
 
       <!-- Right: editorial illustration -->
       <div class="hero-art" aria-hidden="true">
-        <svg viewBox="0 0 520 540" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 520 540" xmlns="http://www.w3.org/2000/svg" class="hero-svg">
           <defs>
             <radialGradient id="h-glow" cx="50%" cy="48%" r="55%">
-              <stop offset="0%"  stop-color="#CC785C" stop-opacity="0.38"/>
+              <stop offset="0%"  stop-color="#CC785C" stop-opacity="0.42"/>
               <stop offset="45%" stop-color="#CC785C" stop-opacity="0.14"/>
               <stop offset="100%" stop-color="#CC785C" stop-opacity="0"/>
             </radialGradient>
@@ -433,46 +443,79 @@
               <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" stitchTiles="stitch"/>
               <feColorMatrix values="0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0 0.08  0 0 0 0.06 0"/>
             </filter>
-            <!-- Anthropic-style sparkle: 4-point star with thin arms -->
             <symbol id="spark" viewBox="-12 -12 24 24">
               <path d="M0,-12 L1.8,-1.8 L12,0 L1.8,1.8 L0,12 L-1.8,1.8 L-12,0 L-1.8,-1.8 Z" fill="currentColor"/>
             </symbol>
+            <!-- Motion paths for message pulses -->
+            <path id="line-cpo" d="M260,260 L260,92"  fill="none"/>
+            <path id="line-tl"  d="M260,260 L430,262" fill="none"/>
+            <path id="line-qa"  d="M260,260 L178,446" fill="none"/>
           </defs>
 
-          <!-- Warm halo -->
-          <circle cx="260" cy="260" r="260" fill="url(#h-glow)"/>
+          <!-- Breathing halo -->
+          <circle cx="260" cy="260" r="260" fill="url(#h-glow)">
+            <animate attributeName="opacity" values="0.75;1;0.75" dur="4.2s" repeatCount="indefinite"/>
+          </circle>
 
-          <!-- Grain overlay inside the art -->
+          <!-- Grain overlay -->
           <rect x="0" y="0" width="520" height="540" filter="url(#h-noise)" opacity="0.5"/>
 
-          <!-- Concentric dotted rings — deliberation layers -->
-          <circle cx="260" cy="260" r="96"  fill="none" stroke="rgba(20,20,19,0.16)" stroke-width="1" stroke-dasharray="1 5"/>
-          <circle cx="260" cy="260" r="156" fill="none" stroke="rgba(20,20,19,0.12)" stroke-width="1" stroke-dasharray="1 5"/>
-          <circle cx="260" cy="260" r="218" fill="none" stroke="rgba(20,20,19,0.08)" stroke-width="1" stroke-dasharray="1 5"/>
+          <!-- Concentric rings, counter-rotating -->
+          <g>
+            <circle cx="260" cy="260" r="96"  fill="none" stroke="rgba(20,20,19,0.18)" stroke-width="1" stroke-dasharray="1 5">
+              <animateTransform attributeName="transform" type="rotate"
+                                from="0 260 260" to="360 260 260"
+                                dur="38s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="260" cy="260" r="156" fill="none" stroke="rgba(20,20,19,0.13)" stroke-width="1" stroke-dasharray="1 5">
+              <animateTransform attributeName="transform" type="rotate"
+                                from="360 260 260" to="0 260 260"
+                                dur="52s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="260" cy="260" r="218" fill="none" stroke="rgba(20,20,19,0.09)" stroke-width="1" stroke-dasharray="1 5">
+              <animateTransform attributeName="transform" type="rotate"
+                                from="0 260 260" to="360 260 260"
+                                dur="68s" repeatCount="indefinite"/>
+            </circle>
+          </g>
 
-          <!-- Connection lines from center to role chips -->
+          <!-- Static connection paths (visible dotted) -->
           <g stroke="rgba(20,20,19,0.18)" stroke-width="1" stroke-dasharray="2 4" fill="none">
-            <path d="M260,260 L260,92"/>
-            <path d="M260,260 L430,262"/>
-            <path d="M260,260 L178,446"/>
+            <use href="#line-cpo"/>
+            <use href="#line-tl"/>
+            <use href="#line-qa"/>
           </g>
 
-          <!-- Central sparkle (primary) -->
+          <!-- Central sparkle — slow spin + nucleus pulse -->
           <g transform="translate(260 260)">
-            <!-- 8-point: two superimposed 4-point stars -->
-            <path d="M0,-92 L12,-12 L92,0 L12,12 L0,92 L-12,12 L-92,0 L-12,-12 Z" fill="url(#h-spark)"/>
-            <path d="M0,-64 L8,-8 L64,0 L8,8 L0,64 L-8,8 L-64,0 L-8,-8 Z"
-                  fill="#FAF9F5" opacity="0.9" transform="rotate(45)"/>
-            <!-- Inner nucleus -->
-            <circle r="10" fill="#141413"/>
+            <g>
+              <animateTransform attributeName="transform" type="rotate"
+                                from="0" to="360"
+                                dur="90s" repeatCount="indefinite"/>
+              <path d="M0,-92 L12,-12 L92,0 L12,12 L0,92 L-12,12 L-92,0 L-12,-12 Z" fill="url(#h-spark)">
+                <animate attributeName="opacity" values="0.92;1;0.92" dur="3.6s" repeatCount="indefinite"/>
+              </path>
+              <path d="M0,-64 L8,-8 L64,0 L8,8 L0,64 L-8,8 L-64,0 L-8,-8 Z"
+                    fill="#FAF9F5" opacity="0.9" transform="rotate(45)"/>
+            </g>
+            <circle r="10" fill="#141413">
+              <animate attributeName="r" values="9;12;9" dur="2.8s" repeatCount="indefinite"/>
+            </circle>
           </g>
 
-          <!-- Role chips -->
+          <!-- Role chips (stroke accents sync to pulse arrivals) -->
           <g font-family="'Switzer', sans-serif">
             <!-- CPO (top) -->
             <g transform="translate(194 74)">
               <rect x="0" y="0" width="132" height="36" rx="18"
-                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)"/>
+                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)" stroke-width="1">
+                <animate attributeName="stroke" dur="9s" repeatCount="indefinite"
+                         keyTimes="0;0.16;0.22;0.32;1"
+                         values="rgba(20,20,19,0.16);#CC785C;#CC785C;rgba(20,20,19,0.16);rgba(20,20,19,0.16)"/>
+                <animate attributeName="stroke-width" dur="9s" repeatCount="indefinite"
+                         keyTimes="0;0.16;0.22;0.32;1"
+                         values="1;1.8;1.8;1;1"/>
+              </rect>
               <circle cx="16" cy="18" r="4" fill="#CC785C"/>
               <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">CPO</text>
               <text x="58" y="22" font-size="11.5" fill="#6A6863">· Sonnet</text>
@@ -480,7 +523,14 @@
             <!-- TechLead (right) -->
             <g transform="translate(370 244)">
               <rect x="0" y="0" width="138" height="36" rx="18"
-                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)"/>
+                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)" stroke-width="1">
+                <animate attributeName="stroke" dur="9s" repeatCount="indefinite"
+                         keyTimes="0;0.48;0.54;0.64;1"
+                         values="rgba(20,20,19,0.16);#9CB47C;#9CB47C;rgba(20,20,19,0.16);rgba(20,20,19,0.16)"/>
+                <animate attributeName="stroke-width" dur="9s" repeatCount="indefinite"
+                         keyTimes="0;0.48;0.54;0.64;1"
+                         values="1;1.8;1.8;1;1"/>
+              </rect>
               <circle cx="16" cy="18" r="4" fill="#9CB47C"/>
               <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">TechLead</text>
               <text x="92" y="22" font-size="11.5" fill="#6A6863">· Haiku</text>
@@ -488,25 +538,91 @@
             <!-- QA (bottom-left) -->
             <g transform="translate(96 428)">
               <rect x="0" y="0" width="164" height="36" rx="18"
-                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)"/>
+                    fill="#FAF9F5" stroke="rgba(20,20,19,0.16)" stroke-width="1">
+                <animate attributeName="stroke" dur="9s" repeatCount="indefinite"
+                         keyTimes="0;0.80;0.86;0.96;1"
+                         values="rgba(20,20,19,0.16);#8B7FB8;#8B7FB8;rgba(20,20,19,0.16);rgba(20,20,19,0.16)"/>
+                <animate attributeName="stroke-width" dur="9s" repeatCount="indefinite"
+                         keyTimes="0;0.80;0.86;0.96;1"
+                         values="1;1.8;1.8;1;1"/>
+              </rect>
               <circle cx="16" cy="18" r="4" fill="#8B7FB8"/>
               <text x="28" y="22" font-size="13" font-weight="500" fill="#141413">QA_Engineer</text>
               <text x="118" y="22" font-size="11.5" fill="#6A6863">· Haiku</text>
             </g>
           </g>
 
-          <!-- Decorative scattered sparkles -->
-          <g color="#CC785C" opacity="0.55">
-            <use href="#spark" x="78"  y="108" width="14" height="14"/>
-            <use href="#spark" x="432" y="128" width="18" height="18"/>
-            <use href="#spark" x="448" y="394" width="12" height="12"/>
-            <use href="#spark" x="92"  y="348" width="16" height="16"/>
-            <use href="#spark" x="344" y="72"  width="10" height="10"/>
+          <!-- Message pulses: three dots circling center → chip → center -->
+          <!-- Total cycle: 9s. Each pulse fires once per cycle, staggered by 3s. -->
+          <!-- Pulse 1 — CPO (coral) -->
+          <circle r="6" fill="#CC785C" opacity="0">
+            <animateMotion dur="9s" repeatCount="indefinite" begin="0s" rotate="auto">
+              <mpath href="#line-cpo"/>
+            </animateMotion>
+            <animate attributeName="opacity" dur="9s" repeatCount="indefinite" begin="0s"
+                     keyTimes="0;0.02;0.17;0.19;1"
+                     values="0;1;1;0;0"/>
+          </circle>
+          <!-- Pulse 2 — TechLead (green) -->
+          <circle r="6" fill="#9CB47C" opacity="0">
+            <animateMotion dur="9s" repeatCount="indefinite" begin="3s" rotate="auto">
+              <mpath href="#line-tl"/>
+            </animateMotion>
+            <animate attributeName="opacity" dur="9s" repeatCount="indefinite" begin="3s"
+                     keyTimes="0;0.02;0.17;0.19;1"
+                     values="0;1;1;0;0"/>
+          </circle>
+          <!-- Pulse 3 — QA (purple) -->
+          <circle r="6" fill="#8B7FB8" opacity="0">
+            <animateMotion dur="9s" repeatCount="indefinite" begin="6s" rotate="auto">
+              <mpath href="#line-qa"/>
+            </animateMotion>
+            <animate attributeName="opacity" dur="9s" repeatCount="indefinite" begin="6s"
+                     keyTimes="0;0.02;0.17;0.19;1"
+                     values="0;1;1;0;0"/>
+          </circle>
+
+          <!-- Twinkling scattered sparkles — staggered rhythms -->
+          <g color="#CC785C">
+            <use href="#spark" x="78"  y="108" width="14" height="14" opacity="0.55">
+              <animate attributeName="opacity" values="0.25;0.85;0.25" dur="2.4s" repeatCount="indefinite"/>
+              <animateTransform attributeName="transform" type="rotate"
+                                from="0 85 115" to="360 85 115" dur="28s" repeatCount="indefinite"/>
+            </use>
+            <use href="#spark" x="432" y="128" width="18" height="18" opacity="0.6">
+              <animate attributeName="opacity" values="0.35;0.9;0.35" dur="3.1s" repeatCount="indefinite" begin="0.6s"/>
+              <animateTransform attributeName="transform" type="rotate"
+                                from="360 441 137" to="0 441 137" dur="32s" repeatCount="indefinite"/>
+            </use>
+            <use href="#spark" x="448" y="394" width="12" height="12" opacity="0.5">
+              <animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.7s" repeatCount="indefinite" begin="1.2s"/>
+              <animateTransform attributeName="transform" type="rotate"
+                                from="0 454 400" to="360 454 400" dur="24s" repeatCount="indefinite"/>
+            </use>
+            <use href="#spark" x="92"  y="348" width="16" height="16" opacity="0.55">
+              <animate attributeName="opacity" values="0.3;0.8;0.3" dur="3.4s" repeatCount="indefinite" begin="0.3s"/>
+              <animateTransform attributeName="transform" type="rotate"
+                                from="360 100 356" to="0 100 356" dur="30s" repeatCount="indefinite"/>
+            </use>
+            <use href="#spark" x="344" y="72"  width="10" height="10" opacity="0.5">
+              <animate attributeName="opacity" values="0.25;0.7;0.25" dur="2.1s" repeatCount="indefinite" begin="1.6s"/>
+            </use>
           </g>
 
-          <!-- Tiny on-screen label -->
+          <!-- LIVE indicator — top-right badge -->
+          <g transform="translate(394 18)" font-family="'Switzer', sans-serif">
+            <rect x="0" y="0" width="110" height="24" rx="12"
+                  fill="#FAF9F5" stroke="rgba(20,20,19,0.12)"/>
+            <circle cx="13" cy="12" r="3.5" fill="#9CB47C">
+              <animate attributeName="opacity" values="1;0.25;1" dur="1.3s" repeatCount="indefinite"/>
+              <animate attributeName="r" values="3.5;4.5;3.5" dur="1.3s" repeatCount="indefinite"/>
+            </circle>
+            <text x="24" y="16" font-size="10" font-weight="500" fill="#141413" letter-spacing="1.3">DELIBERATING</text>
+          </g>
+
+          <!-- Tagline -->
           <g font-family="'Switzer', sans-serif" fill="#6A6863">
-            <text x="260" y="506" font-size="11" letter-spacing="0.14em" text-transform="uppercase" text-anchor="middle">
+            <text x="260" y="506" font-size="11" letter-spacing="0.14em" text-anchor="middle">
               ONE GOAL · THREE ROLES · ONE DECISION TRAIL
             </text>
           </g>
