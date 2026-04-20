@@ -2,14 +2,15 @@
 conclave/org.py
 Loads a conclave.yml and instantiates the agent graph.
 """
+
 from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
-import yaml
+
 import anthropic
+import yaml
 
 from .agent import ConclaveAgent
-from .bus import Conclavebus
 
 
 def _build_org_structure(agents_cfg: list[dict]) -> str:
@@ -21,7 +22,9 @@ def _build_org_structure(agents_cfg: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def load_org(path: str | Path, client: anthropic.Anthropic) -> tuple[dict[str, ConclaveAgent], str, str, str]:
+def load_org(
+    path: str | Path, client: anthropic.Anthropic
+) -> tuple[dict[str, ConclaveAgent], str, str, str]:
     """
     Parse conclave.yml, return (agents_dict, org_name, deliberation, entry_role).
     entry_role = the role with no reports_to (top of hierarchy).

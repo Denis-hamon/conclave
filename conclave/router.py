@@ -35,28 +35,30 @@ Token cost reality check (as of April 2026, per 1M tokens):
 A Haiku correction loop (3 iterations) costs ~0.3x a single Sonnet call.
 For repetitive tasks, the savings compound across every agent turn.
 """
-from __future__ import annotations
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Optional
-import anthropic
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+
+import anthropic
 
 # ---------------------------------------------------------------------------
 # Model tiers
 # ---------------------------------------------------------------------------
 
+
 class ModelTier(str, Enum):
-    HAIKU   = "claude-haiku-4-5-20251001"    # cheap, fast, iterative
-    SONNET  = "claude-sonnet-4-6"            # deliberation, strategy
-    OPUS    = "claude-opus-4-6"              # only when explicitly required
+    HAIKU = "claude-haiku-4-5-20251001"  # cheap, fast, iterative
+    SONNET = "claude-sonnet-4-6"  # deliberation, strategy
+    OPUS = "claude-opus-4-6"  # only when explicitly required
 
 
 # Cost per 1M tokens (USD, April 2026)
 MODEL_COST = {
-    ModelTier.HAIKU:  {"input": 0.80,  "output": 4.00},
-    ModelTier.SONNET: {"input": 3.00,  "output": 15.00},
-    ModelTier.OPUS:   {"input": 15.00, "output": 75.00},
+    ModelTier.HAIKU: {"input": 0.80, "output": 4.00},
+    ModelTier.SONNET: {"input": 3.00, "output": 15.00},
+    ModelTier.OPUS: {"input": 15.00, "output": 75.00},
 }
 
 
@@ -64,24 +66,26 @@ MODEL_COST = {
 # Executor types
 # ---------------------------------------------------------------------------
 
+
 class ExecutorType(str, Enum):
-    NATIVE     = "native"       # Conclave's own agent loop
-    DEEPAGENTS = "deepagents"   # delegate to LangChain DeepAgents
+    NATIVE = "native"  # Conclave's own agent loop
+    DEEPAGENTS = "deepagents"  # delegate to LangChain DeepAgents
 
 
 # ---------------------------------------------------------------------------
 # Routing decision
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class RoutingDecision:
-    model:        ModelTier
-    executor:     ExecutorType
-    use_loop:     bool          # True → Haiku correction loop
-    max_retries:  int           # loop retries before escalation
-    rationale:    str           # why this decision was made
-    novelty:      float         # 0.0–1.0
-    complexity:   float         # 0.0–1.0
+    model: ModelTier
+    executor: ExecutorType
+    use_loop: bool  # True → Haiku correction loop
+    max_retries: int  # loop retries before escalation
+    rationale: str  # why this decision was made
+    novelty: float  # 0.0–1.0
+    complexity: float  # 0.0–1.0
 
 
 # ---------------------------------------------------------------------------
@@ -120,20 +124,20 @@ class TaskRouter:
     """
 
     # Thresholds for routing decisions
-    NOVELTY_THRESHOLD    = 0.5
+    NOVELTY_THRESHOLD = 0.5
     COMPLEXITY_THRESHOLD = 0.5
 
     def __init__(self, client: anthropic.Anthropic):
         self.client = client
 
-    def route(self, task: str, role: str, executor_override: Optional[str] = None) -> RoutingDecision:
+    def route(self, task: str, role: str, executor_override: str | None = None) -> RoutingDecision:
         """Classify the task and return a routing decision."""
         import json
 
         prompt = f"ROLE: {role}\nTASK: {task}"
 
         resp = self.client.messages.create(
-            model=ModelTier.HAIKU,          # classifier always runs on Haiku
+            model=ModelTier.HAIKU,  # classifier always runs on Haiku
             max_tokens=256,
             system=CLASSIFIER_PROMPT,
             messages=[{"role": "user", "content": prompt}],
@@ -143,14 +147,19 @@ class TaskRouter:
             clf = json.loads(resp.content[0].text.strip())
         except Exception:
             # Fallback to safe defaults if parsing fails
-            clf = {"novelty": 0.6, "complexity": 0.6, "is_repetitive": False,
-                   "needs_filesystem": False, "rationale": "classification failed, defaulting to Sonnet"}
+            clf = {
+                "novelty": 0.6,
+                "complexity": 0.6,
+                "is_repetitive": False,
+                "needs_filesystem": False,
+                "rationale": "classification failed, defaulting to Sonnet",
+            }
 
-        novelty     = float(clf.get("novelty", 0.6))
-        complexity  = float(clf.get("complexity", 0.6))
-        repetitive  = bool(clf.get("is_repetitive", False))
-        needs_fs    = bool(clf.get("needs_filesystem", False))
-        rationale   = clf.get("rationale", "")
+        novelty = float(clf.get("novelty", 0.6))
+        complexity = float(clf.get("complexity", 0.6))
+        repetitive = bool(clf.get("is_repetitive", False))
+        needs_fs = bool(clf.get("needs_filesystem", False))
+        rationale = clf.get("rationale", "")
 
         # --- Executor decision ---
         if executor_override:
@@ -161,20 +170,20 @@ class TaskRouter:
             executor = ExecutorType.NATIVE
 
         # --- Model tier decision ---
-        high_novelty     = novelty    >= self.NOVELTY_THRESHOLD
-        high_complexity  = complexity >= self.COMPLEXITY_THRESHOLD
+        high_novelty = novelty >= self.NOVELTY_THRESHOLD
+        high_complexity = complexity >= self.COMPLEXITY_THRESHOLD
 
         if high_novelty or high_complexity:
             # Complex/novel → Sonnet deliberates
-            model     = ModelTier.SONNET
-            use_loop  = False
-            retries   = 0
+            model = ModelTier.SONNET
+            use_loop = False
+            retries = 0
             rationale = f"[→ Sonnet] {rationale}"
         else:
             # Simple/repetitive → Haiku iterates
-            model     = ModelTier.HAIKU
-            use_loop  = True
-            retries   = 4 if repetitive else 3
+            model = ModelTier.HAIKU
+            use_loop = True
+            retries = 4 if repetitive else 3
             rationale = f"[→ Haiku loop ×{retries}] {rationale}"
 
         return RoutingDecision(

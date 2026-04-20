@@ -3,23 +3,21 @@ conclave/bus.py
 The inter-agent message bus — the coordination layer that Managed Agents doesn't ship yet.
 Routes messages between agents, applies deliberation strategy, writes the Decision Trail.
 """
+
 from __future__ import annotations
+
 import json
-import time
 from pathlib import Path
-from typing import Optional
+
 from rich.console import Console
-from rich.text import Text
 from rich.panel import Panel
+from rich.text import Text
 
 from .agent import ConclaveAgent, Message
 
-
 console = Console()
 
-ROLE_COLORS = [
-    "cyan", "magenta", "yellow", "green", "blue", "red", "white"
-]
+ROLE_COLORS = ["cyan", "magenta", "yellow", "green", "blue", "red", "white"]
 
 
 class Conclavebus:
@@ -43,8 +41,7 @@ class Conclavebus:
         self.trail: list[dict] = []
         self.outputs: dict[str, str] = {}
         self._role_colors = {
-            role: ROLE_COLORS[i % len(ROLE_COLORS)]
-            for i, role in enumerate(agents.keys())
+            role: ROLE_COLORS[i % len(ROLE_COLORS)] for i, role in enumerate(agents.keys())
         }
         self.trail_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -54,11 +51,13 @@ class Conclavebus:
         Returns collected outputs.
         """
         console.print()
-        console.print(Panel(
-            f"[bold white]{goal}[/bold white]",
-            title="[bold cyan]◆ Conclave · Deliberation started[/bold cyan]",
-            border_style="cyan",
-        ))
+        console.print(
+            Panel(
+                f"[bold white]{goal}[/bold white]",
+                title="[bold cyan]◆ Conclave · Deliberation started[/bold cyan]",
+                border_style="cyan",
+            )
+        )
         console.print()
 
         # Seed message from "user" to the entry agent
@@ -88,9 +87,7 @@ class Conclavebus:
 
             if response.msg_type == "output":
                 self.outputs[target_role] = response.content
-                console.print(
-                    f"  [bold green]✓ Output from {target_role}[/bold green]"
-                )
+                console.print(f"  [bold green]✓ Output from {target_role}[/bold green]")
                 if self._deliberation_complete():
                     break
                 # Continue routing if there's a recipient
@@ -150,6 +147,7 @@ class Conclavebus:
 
     def _print_summary(self):
         from .cost import CostMeter
+
         # Merge all agent cost meters
         global_meter = CostMeter()
         for agent in self.agents.values():
@@ -157,10 +155,12 @@ class Conclavebus:
 
         cost_lines = "\n".join(global_meter.summary_lines())
 
-        console.print(Panel(
-            f"[green]Decision Trail → {self.trail_path}[/green]\n"
-            f"[green]Turns: {len(self.trail)}  ·  Outputs: {len(self.outputs)} artifact(s)[/green]\n\n"
-            f"[bold]Token cost breakdown[/bold]\n{cost_lines}",
-            title="[bold cyan]◆ Conclave · Deliberation complete[/bold cyan]",
-            border_style="cyan",
-        ))
+        console.print(
+            Panel(
+                f"[green]Decision Trail → {self.trail_path}[/green]\n"
+                f"[green]Turns: {len(self.trail)}  ·  Outputs: {len(self.outputs)} artifact(s)[/green]\n\n"
+                f"[bold]Token cost breakdown[/bold]\n{cost_lines}",
+                title="[bold cyan]◆ Conclave · Deliberation complete[/bold cyan]",
+                border_style="cyan",
+            )
+        )

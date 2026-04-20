@@ -10,19 +10,19 @@ ConclaveBenchmark — runs a fixed set of benchmark tasks through three configs:
 For each (task, config) we record model, tokens, cost, quality, latency,
 then emit a results.json file and a rich summary table.
 """
+
 from __future__ import annotations
+
 import json
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Optional
 
 import anthropic
 
-from .router import TaskRouter, ModelTier, RoutingDecision, ExecutorType
-from .cost import CostMeter, COST_TABLE
-from .benchmark_tasks import BENCHMARK_TASKS, BENCHMARK_CATEGORIES
-
+from .benchmark_tasks import BENCHMARK_CATEGORIES, BENCHMARK_TASKS
+from .cost import COST_TABLE
+from .router import ModelTier, RoutingDecision, TaskRouter
 
 QUALITY_EVALUATOR = """
 You are a strict output evaluator. Score the ATTEMPT against the TASK on a
@@ -56,7 +56,7 @@ class ConclaveBenchmark:
         self.runs: list[BenchRun] = []
 
     # ------------------------------------------------------------------
-    def run(self, tasks: Optional[list[dict]] = None) -> dict:
+    def run(self, tasks: list[dict] | None = None) -> dict:
         tasks = tasks or BENCHMARK_TASKS
         for task in tasks:
             self._run_task(task, config="haiku_only", forced_model=ModelTier.HAIKU)
@@ -65,7 +65,7 @@ class ConclaveBenchmark:
         return self._summarize()
 
     # ------------------------------------------------------------------
-    def _run_task(self, task: dict, config: str, forced_model: Optional[ModelTier]):
+    def _run_task(self, task: dict, config: str, forced_model: ModelTier | None):
         model = forced_model.value if forced_model else self._route(task).model.value
         start = time.time()
         resp = self.client.messages.create(
@@ -81,17 +81,19 @@ class ConclaveBenchmark:
 
         quality = self._score(task, text)
 
-        self.runs.append(BenchRun(
-            task_id=task["id"],
-            category=task["category"],
-            config=config,
-            model=model,
-            input_tokens=in_tok,
-            output_tokens=out_tok,
-            cost_usd=round(_cost(model, in_tok, out_tok), 6),
-            quality=quality,
-            latency_s=round(latency, 3),
-        ))
+        self.runs.append(
+            BenchRun(
+                task_id=task["id"],
+                category=task["category"],
+                config=config,
+                model=model,
+                input_tokens=in_tok,
+                output_tokens=out_tok,
+                cost_usd=round(_cost(model, in_tok, out_tok), 6),
+                quality=quality,
+                latency_s=round(latency, 3),
+            )
+        )
 
     def _route(self, task: dict) -> RoutingDecision:
         return TaskRouter(self.client).route(task["input"], role=task["role"])
@@ -103,7 +105,12 @@ class ConclaveBenchmark:
                 model=ModelTier.HAIKU.value,
                 max_tokens=128,
                 system=QUALITY_EVALUATOR,
-                messages=[{"role": "user", "content": f"TASK:\n{task['input']}\n\nATTEMPT:\n{attempt}"}],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"TASK:\n{task['input']}\n\nATTEMPT:\n{attempt}",
+                    }
+                ],
             )
             payload = json.loads(resp.content[0].text.strip())
             return float(payload.get("score", 0.0))
@@ -113,8 +120,16 @@ class ConclaveBenchmark:
     # ------------------------------------------------------------------
     def _summarize(self) -> dict:
         by_config = {"haiku_only": 0.0, "sonnet_only": 0.0, "conclave": 0.0}
-        by_cat: dict[str, dict[str, float]] = {c: {"haiku_only": 0.0, "sonnet_only": 0.0, "conclave": 0.0, "quality": 0.0, "n": 0}
-                                               for c in BENCHMARK_CATEGORIES}
+        by_cat: dict[str, dict[str, float]] = {
+            c: {
+                "haiku_only": 0.0,
+                "sonnet_only": 0.0,
+                "conclave": 0.0,
+                "quality": 0.0,
+                "n": 0,
+            }
+            for c in BENCHMARK_CATEGORIES
+        }
         conclave_quality_sum = 0.0
         sonnet_quality_sum = 0.0
         count = 0
@@ -131,9 +146,14 @@ class ConclaveBenchmark:
 
         sonnet_total = by_config["sonnet_only"] or 1e-9
         saving_pct = round((sonnet_total - by_config["conclave"]) / sonnet_total * 100, 1)
-        quality_pct = round(
-            (conclave_quality_sum / count) / (sonnet_quality_sum / max(count, 1)) * 100, 1
-        ) if count else 0.0
+        quality_pct = (
+            round(
+                (conclave_quality_sum / count) / (sonnet_quality_sum / max(count, 1)) * 100,
+                1,
+            )
+            if count
+            else 0.0
+        )
 
         return {
             "run_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -141,9 +161,9 @@ class ConclaveBenchmark:
             "haiku_model": ModelTier.HAIKU.value,
             "sonnet_model": ModelTier.SONNET.value,
             "summary": {
-                "haiku_only_cost":  round(by_config["haiku_only"], 4),
+                "haiku_only_cost": round(by_config["haiku_only"], 4),
                 "sonnet_only_cost": round(by_config["sonnet_only"], 4),
-                "conclave_cost":    round(by_config["conclave"], 4),
+                "conclave_cost": round(by_config["conclave"], 4),
                 "conclave_saving_vs_sonnet_pct": saving_pct,
                 "conclave_quality_vs_sonnet_pct": quality_pct,
             },

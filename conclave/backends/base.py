@@ -3,7 +3,9 @@ conclave/backends/base.py
 
 Abstract base for agent execution backends.
 """
+
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -38,8 +40,14 @@ class AgentBackend(ABC):
         """Return an opaque session_id for this role."""
 
     @abstractmethod
-    def send(self, session_id: str, messages: list[dict], model: str,
-             system: str, max_tokens: int = 1024) -> BackendResponse:
+    def send(
+        self,
+        session_id: str,
+        messages: list[dict],
+        model: str,
+        system: str,
+        max_tokens: int = 1024,
+    ) -> BackendResponse:
         """Send a turn and return the assistant response + usage."""
 
     def close_session(self, session_id: str) -> None:

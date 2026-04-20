@@ -28,15 +28,16 @@ The savings vs. always-Sonnet: ~70-85% per task.
 
 The self-evaluator also runs on Haiku. Ironic. Intentional.
 """
+
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Optional
+
 import json
+from dataclasses import dataclass
+
 import anthropic
 
-from ..router import ModelTier, RoutingDecision
 from ..cost import CostMeter
-
+from ..router import ModelTier, RoutingDecision
 
 EXECUTOR_SYSTEM = """
 You are executing a specific task assigned to you by a {role} in an organization.
@@ -66,18 +67,18 @@ Return ONLY the JSON. No markdown.
 """.strip()
 
 
-PASS_THRESHOLD  = 0.80
+PASS_THRESHOLD = 0.80
 ESCALATION_NOTE = "[ESCALATED TO SONNET after Haiku loop exhausted]"
 
 
 @dataclass
 class LoopResult:
-    output:       str
-    iterations:   int
-    final_score:  float
-    escalated:    bool
-    model_used:   ModelTier
-    cost_meter:   CostMeter
+    output: str
+    iterations: int
+    final_score: float
+    escalated: bool
+    model_used: ModelTier
+    cost_meter: CostMeter
 
 
 class HaikuCorrectionLoop:
@@ -87,14 +88,14 @@ class HaikuCorrectionLoop:
     """
 
     def __init__(self, client: anthropic.Anthropic, decision: RoutingDecision, role: str):
-        self.client   = client
+        self.client = client
         self.decision = decision
-        self.role     = role
-        self.meter    = CostMeter()
+        self.role = role
+        self.meter = CostMeter()
 
     def run(self, task: str) -> LoopResult:
-        attempt  = ""
-        score    = 0.0
+        attempt = ""
+        score = 0.0
         feedback = ""
 
         for i in range(self.decision.max_retries):
@@ -121,13 +122,17 @@ class HaikuCorrectionLoop:
                 system=EVALUATOR_SYSTEM,
                 messages=[{"role": "user", "content": eval_prompt}],
             )
-            self.meter.record(ModelTier.HAIKU, eval_resp.usage.input_tokens, eval_resp.usage.output_tokens)
+            self.meter.record(
+                ModelTier.HAIKU,
+                eval_resp.usage.input_tokens,
+                eval_resp.usage.output_tokens,
+            )
 
             try:
                 evaluation = json.loads(eval_resp.content[0].text.strip())
-                score      = float(evaluation.get("score", 0.0))
-                passed     = bool(evaluation.get("passed", False))
-                feedback   = evaluation.get("feedback", "")
+                score = float(evaluation.get("score", 0.0))
+                passed = bool(evaluation.get("passed", False))
+                feedback = evaluation.get("feedback", "")
             except Exception:
                 score, passed, feedback = 0.5, False, "Evaluation parse error — retry."
 
@@ -154,12 +159,16 @@ class HaikuCorrectionLoop:
             messages=[{"role": "user", "content": escalation_prompt}],
         )
         final_output = sonnet_resp.content[0].text.strip()
-        self.meter.record(ModelTier.SONNET, sonnet_resp.usage.input_tokens, sonnet_resp.usage.output_tokens)
+        self.meter.record(
+            ModelTier.SONNET,
+            sonnet_resp.usage.input_tokens,
+            sonnet_resp.usage.output_tokens,
+        )
 
         return LoopResult(
             output=f"{ESCALATION_NOTE}\n\n{final_output}",
             iterations=self.decision.max_retries,
-            final_score=1.0,    # Sonnet is the final answer
+            final_score=1.0,  # Sonnet is the final answer
             escalated=True,
             model_used=ModelTier.SONNET,
             cost_meter=self.meter,

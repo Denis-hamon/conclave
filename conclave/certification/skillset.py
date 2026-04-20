@@ -14,12 +14,14 @@ Skillsets are versioned, stored locally, and referenced by certificates.
 They are the core organizational asset that Conclave produces —
 the encoded expertise of the organization, made executable by Haiku.
 """
+
 from __future__ import annotations
+
 import json
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional
+
 import anthropic
 
 from .observatory import ObservedAction
@@ -53,17 +55,17 @@ Return ONLY the JSON. No markdown, no preamble.
 
 @dataclass
 class Skillset:
-    role:             str
-    task_type:        str
-    version:          str
-    system_prompt:    str
-    rules:            list[str]
-    quality_signals:  list[str]
-    failure_modes:    list[str]
-    examples:         list[dict]   # [{input, output}]
-    ref_docs:         list[str]    # filenames of reference documents
-    created_at:       str = field(default_factory=lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ"))
-    sample_size:      int = 0
+    role: str
+    task_type: str
+    version: str
+    system_prompt: str
+    rules: list[str]
+    quality_signals: list[str]
+    failure_modes: list[str]
+    examples: list[dict]  # [{input, output}]
+    ref_docs: list[str]  # filenames of reference documents
+    created_at: str = field(default_factory=lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    sample_size: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -76,7 +78,7 @@ class Skillset:
         return p
 
     @staticmethod
-    def load(role: str, task_type: str, version: str = "latest") -> Optional["Skillset"]:
+    def load(role: str, task_type: str, version: str = "latest") -> Skillset | None:
         d = SKILLSETS_DIR / role.lower() / task_type
         if not d.exists():
             return None
@@ -95,10 +97,7 @@ class Skillset:
     def as_system_prompt(self) -> str:
         """Full system prompt to inject into Haiku for this task."""
         rules_text = "\n".join(f"- {r}" for r in self.rules)
-        return (
-            f"{self.system_prompt}\n\n"
-            f"RULES FOR THIS TASK:\n{rules_text}"
-        )
+        return f"{self.system_prompt}\n\nRULES FOR THIS TASK:\n{rules_text}"
 
 
 class SkillsetBuilder:
@@ -112,11 +111,11 @@ class SkillsetBuilder:
 
     def build(
         self,
-        role:       str,
-        task_type:  str,
-        actions:    list[ObservedAction],
-        ref_docs:   Optional[list[str]] = None,
-        version:    str = "1.0",
+        role: str,
+        task_type: str,
+        actions: list[ObservedAction],
+        ref_docs: list[str] | None = None,
+        version: str = "1.0",
     ) -> Skillset:
         # Pick top-quality examples (score ≥ 0.85)
         gold = sorted(
@@ -133,14 +132,16 @@ class SkillsetBuilder:
         resp = self.client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=2048,
-            messages=[{
-                "role": "user",
-                "content": DISTILLATION_PROMPT.format(
-                    model=actions[0].model if actions else "Sonnet",
-                    role=role,
-                    samples=samples_text,
-                )
-            }],
+            messages=[
+                {
+                    "role": "user",
+                    "content": DISTILLATION_PROMPT.format(
+                        model=actions[0].model if actions else "Sonnet",
+                        role=role,
+                        samples=samples_text,
+                    ),
+                }
+            ],
         )
 
         try:

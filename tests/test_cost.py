@@ -1,6 +1,9 @@
 """Unit tests for CostMeter."""
+
 from __future__ import annotations
+
 import pytest
+
 from conclave.cost import CostMeter
 from conclave.router import ModelTier
 

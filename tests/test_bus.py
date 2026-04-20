@@ -1,23 +1,35 @@
 """Unit tests for Conclavebus."""
+
 from __future__ import annotations
+
 import json
 from pathlib import Path
-from conclave.agent import ConclaveAgent, Message
+
+from conclave.agent import ConclaveAgent
 from conclave.bus import Conclavebus
 
 
 def _classifier_payload():
-    return json.dumps({
-        "novelty": 0.9, "complexity": 0.9,
-        "is_repetitive": False, "needs_filesystem": False,
-        "rationale": "complex"
-    })
+    return json.dumps(
+        {
+            "novelty": 0.9,
+            "complexity": 0.9,
+            "is_repetitive": False,
+            "needs_filesystem": False,
+            "rationale": "complex",
+        }
+    )
 
 
 def _agent(mock_client, role, reports_to=None):
     return ConclaveAgent(
-        role=role, persona=f"{role} persona", org_name="TestOrg", tools=[],
-        reports_to=reports_to, org_structure=f"{role}", deliberation="hierarchy",
+        role=role,
+        persona=f"{role} persona",
+        org_name="TestOrg",
+        tools=[],
+        reports_to=reports_to,
+        org_structure=f"{role}",
+        deliberation="hierarchy",
         client=mock_client,
     )
 
@@ -49,8 +61,10 @@ def test_decision_trail_written(mock_client, tmp_path: Path):
     lead = _agent(mock_client, "Lead")
     trail = tmp_path / "trail.jsonl"
     bus = Conclavebus(
-        agents={"Lead": lead}, deliberation="hierarchy",
-        trail_path=trail, max_turns=2,
+        agents={"Lead": lead},
+        deliberation="hierarchy",
+        trail_path=trail,
+        max_turns=2,
     )
     bus.run("Goal", entry_agent="Lead")
     assert trail.exists()

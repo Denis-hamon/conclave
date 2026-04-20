@@ -9,14 +9,16 @@ $ conclave status
 
 Or from Claude Code: /conclave
 """
+
 import os
 import time
 from pathlib import Path
-import click
+
 import anthropic
+import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
@@ -36,21 +38,27 @@ def cli():
 
 # ─── RUN ──────────────────────────────────────────────────────────────────────
 
+
 @cli.command()
 @click.argument("goal")
-@click.option("--org",          default="conclave.yml", show_default=True)
+@click.option("--org", default="conclave.yml", show_default=True)
 @click.option("--deliberation", default=None)
-@click.option("--max-turns",    default=20, show_default=True)
-@click.option("--trail-dir",    default=".conclave",    show_default=True)
-@click.option("--dry-run",      is_flag=True, default=False,
-              help="Simulate deliberation with no API calls.")
+@click.option("--max-turns", default=20, show_default=True)
+@click.option("--trail-dir", default=".conclave", show_default=True)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Simulate deliberation with no API calls.",
+)
 def run(goal, org, deliberation, max_turns, trail_dir, dry_run):
     """Run a goal through the org and produce a Decision Trail."""
-    from .org import load_org
     from .bus import Conclavebus
+    from .org import load_org
 
     if dry_run:
         from .dry_run import DryRunClient
+
         client = DryRunClient()
         console.print("[bold yellow]⚠ [DRY RUN — no API calls made][/bold yellow]")
     else:
@@ -73,15 +81,19 @@ def run(goal, org, deliberation, max_turns, trail_dir, dry_run):
 
 # ─── INIT ─────────────────────────────────────────────────────────────────────
 
+
 @cli.command()
-@click.option("--template", default="product-squad",
-              type=click.Choice(["startup-5","product-squad","growth-squad","creative-agency"]))
+@click.option(
+    "--template",
+    default="product-squad",
+    type=click.Choice(["startup-5", "product-squad", "growth-squad", "creative-agency"]),
+)
 def init(template):
     """Initialize a conclave.yml from a template."""
     templates = {
         "product-squad": _product_squad(),
-        "startup-5":     _startup_5(),
-        "growth-squad":  _growth_squad(),
+        "startup-5": _startup_5(),
+        "growth-squad": _growth_squad(),
         "creative-agency": _creative_agency(),
     }
     out = Path("conclave.yml")
@@ -89,10 +101,11 @@ def init(template):
         raise click.ClickException("conclave.yml already exists.")
     out.write_text(templates[template])
     console.print(f"[green]✓[/green] Created conclave.yml — template: [bold]{template}[/bold]")
-    console.print("  Next: [bold]conclave run \"your goal\"[/bold]")
+    console.print('  Next: [bold]conclave run "your goal"[/bold]')
 
 
 # ─── OBSERVE ──────────────────────────────────────────────────────────────────
+
 
 @cli.command()
 @click.option("--org", default="conclave.yml", show_default=True)
@@ -101,18 +114,20 @@ def observe(org):
     from .certification import Observatory
     from .org import load_org
 
-    client       = _client()
+    client = _client()
     _, org_name, _, _ = load_org(org, client)
-    obs          = Observatory(org_name)
-    stats        = obs.stats()
+    obs = Observatory(org_name)
+    stats = obs.stats()
 
     console.print()
-    console.print(Panel(
-        f"[bold]Actions recorded:[/bold]  {stats['total_actions']}\n"
-        f"[bold]Prod cost logged:[/bold]  ${stats['total_cost_usd']:.4f}",
-        title="[bold cyan]◆ Conclave · Observatory[/bold cyan]",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Actions recorded:[/bold]  {stats['total_actions']}\n"
+            f"[bold]Prod cost logged:[/bold]  ${stats['total_cost_usd']:.4f}",
+            title="[bold cyan]◆ Conclave · Observatory[/bold cyan]",
+            border_style="cyan",
+        )
+    )
 
     if stats["task_types"]:
         t = Table(show_header=True, header_style="bold")
@@ -128,21 +143,22 @@ def observe(org):
 
 # ─── SIMULATE ─────────────────────────────────────────────────────────────────
 
+
 @cli.command()
 @click.argument("role")
 @click.argument("task_type")
-@click.option("--org",               default="conclave.yml", show_default=True)
-@click.option("--runs",              default=50,   show_default=True)
-@click.option("--skillset-version",  default="1.0")
+@click.option("--org", default="conclave.yml", show_default=True)
+@click.option("--runs", default=50, show_default=True)
+@click.option("--skillset-version", default="1.0")
 def simulate(role, task_type, org, runs, skillset_version):
     """Replay observed actions with Haiku + skillset and score quality."""
-    from .certification import Observatory, SkillsetBuilder, Skillset, Simulator
+    from .certification import Observatory, Simulator, Skillset, SkillsetBuilder
     from .org import load_org
 
-    client        = _client()
+    client = _client()
     _, org_name, _, _ = load_org(org, client)
-    obs           = Observatory(org_name)
-    actions       = obs.load_for_task(role, task_type, limit=runs)
+    obs = Observatory(org_name)
+    actions = obs.load_for_task(role, task_type, limit=runs)
 
     if not actions:
         console.print(f"[red]No actions for {role}/{task_type}. Run conclave run first.[/red]")
@@ -159,16 +175,18 @@ def simulate(role, task_type, org, runs, skillset_version):
     report = Simulator(client).run(role, task_type, skillset, actions, max_runs=runs)
 
     color = "green" if report.pass_rate >= 0.85 else "yellow" if report.pass_rate >= 0.70 else "red"
-    console.print(Panel(
-        f"[bold]Pass rate:[/bold]     [{color}]{report.pass_rate:.0%}[/{color}]  ({report.passed_runs}/{report.total_runs})\n"
-        f"[bold]Avg quality:[/bold]  {report.avg_overall:.2f}\n"
-        f"  structural    {report.avg_structural:.2f}\n"
-        f"  completeness  {report.avg_completeness:.2f}\n"
-        f"  coherence     {report.avg_coherence:.2f}\n\n"
-        f"[bold]Cost saving:[/bold]  [green]{report.cost_meter.savings_pct:.0f}%[/green] vs all-Sonnet",
-        title=f"[bold cyan]◆ Simulation · {role} / {task_type}[/bold cyan]",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Pass rate:[/bold]     [{color}]{report.pass_rate:.0%}[/{color}]  ({report.passed_runs}/{report.total_runs})\n"
+            f"[bold]Avg quality:[/bold]  {report.avg_overall:.2f}\n"
+            f"  structural    {report.avg_structural:.2f}\n"
+            f"  completeness  {report.avg_completeness:.2f}\n"
+            f"  coherence     {report.avg_coherence:.2f}\n\n"
+            f"[bold]Cost saving:[/bold]  [green]{report.cost_meter.savings_pct:.0f}%[/green] vs all-Sonnet",
+            title=f"[bold cyan]◆ Simulation · {role} / {task_type}[/bold cyan]",
+            border_style="cyan",
+        )
+    )
 
     if report.pass_rate >= 0.70:
         console.print(f"\n[dim]→ conclave certify {role} {task_type}[/dim]")
@@ -178,6 +196,7 @@ def simulate(role, task_type, org, runs, skillset_version):
 
 # ─── CERTIFY ──────────────────────────────────────────────────────────────────
 
+
 @cli.command()
 @click.argument("role")
 @click.argument("task_type")
@@ -185,12 +204,17 @@ def simulate(role, task_type, org, runs, skillset_version):
 def certify(role, task_type, skillset_version):
     """Certify a task for Haiku routing and update the routing policy."""
     from .certification import (
-        Observatory, Skillset, Simulator, Certifier, RoutingPolicy, CertStatus
+        Certifier,
+        CertStatus,
+        Observatory,
+        RoutingPolicy,
+        Simulator,
+        Skillset,
     )
 
-    client   = _client()
-    obs      = Observatory("default")
-    actions  = obs.load_for_task(role, task_type)
+    client = _client()
+    obs = Observatory("default")
+    actions = obs.load_for_task(role, task_type)
 
     if not actions:
         console.print("[red]No actions. Run conclave run first.[/red]")
@@ -202,23 +226,25 @@ def certify(role, task_type, skillset_version):
         return
 
     report = Simulator(client).run(role, task_type, skillset, actions)
-    cert   = Certifier().certify(report)
+    cert = Certifier().certify(report)
     RoutingPolicy().rebuild()
 
     icons = {
-        CertStatus.CERTIFIED:   "[green]✓ CERTIFIED[/green]",
+        CertStatus.CERTIFIED: "[green]✓ CERTIFIED[/green]",
         CertStatus.CONDITIONAL: "[yellow]~ CONDITIONAL[/yellow]",
-        CertStatus.REJECTED:    "[red]✗ REJECTED[/red]",
+        CertStatus.REJECTED: "[red]✗ REJECTED[/red]",
     }
-    console.print(Panel(
-        f"[bold]Status:[/bold]    {icons[cert.status]}\n"
-        f"[bold]Pass rate:[/bold] {cert.pass_rate:.0%}  ({cert.sample_size} runs)\n"
-        f"[bold]Saving:[/bold]    [green]{cert.cost_saving_pct:.0f}%[/green]\n"
-        f"[bold]Expires:[/bold]   {cert.expires_at}"
-        + (f"\n\n[dim]{cert.notes}[/dim]" if cert.notes else ""),
-        title=f"[bold cyan]◆ Certificate · {role} / {task_type}[/bold cyan]",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Status:[/bold]    {icons[cert.status]}\n"
+            f"[bold]Pass rate:[/bold] {cert.pass_rate:.0%}  ({cert.sample_size} runs)\n"
+            f"[bold]Saving:[/bold]    [green]{cert.cost_saving_pct:.0f}%[/green]\n"
+            f"[bold]Expires:[/bold]   {cert.expires_at}"
+            + (f"\n\n[dim]{cert.notes}[/dim]" if cert.notes else ""),
+            title=f"[bold cyan]◆ Certificate · {role} / {task_type}[/bold cyan]",
+            border_style="cyan",
+        )
+    )
 
     if cert.status != CertStatus.REJECTED:
         console.print("\n[dim]Routing policy updated → conclave status[/dim]")
@@ -226,10 +252,11 @@ def certify(role, task_type, skillset_version):
 
 # ─── STATUS ───────────────────────────────────────────────────────────────────
 
+
 @cli.command()
 def status():
     """Show routing policy, certifications, and cost savings."""
-    from .certification import RoutingPolicy, CertStatus
+    from .certification import CertStatus, RoutingPolicy
 
     rows = RoutingPolicy().status_table()
     if not rows:
@@ -237,10 +264,10 @@ def status():
         return
 
     t = Table(show_header=True, header_style="bold cyan", border_style="dim")
-    t.add_column("Role",    style="bold")
+    t.add_column("Role", style="bold")
     t.add_column("Task")
     t.add_column("Status")
-    t.add_column("Saving",  justify="right")
+    t.add_column("Saving", justify="right")
     t.add_column("Expires")
 
     certified = 0
@@ -254,17 +281,24 @@ def status():
         else:
             icon = "[red]✗ REJECTED[/red]"
 
-        saving = f"[green]{row['cost_saving_pct']:.0f}%[/green]" if st != CertStatus.REJECTED.value else "—"
+        saving = (
+            f"[green]{row['cost_saving_pct']:.0f}%[/green]"
+            if st != CertStatus.REJECTED.value
+            else "—"
+        )
         t.add_row(row["role"], row["task_type"], icon, saving, row.get("expires_at", "—"))
 
     share = certified / len(rows) * 100 if rows else 0
     console.print()
     console.print(t)
-    console.print(f"\n  Certified workload share : [bold green]{share:.0f}%[/bold green]  ({certified}/{len(rows)} task types)")
+    console.print(
+        f"\n  Certified workload share : [bold green]{share:.0f}%[/bold green]  ({certified}/{len(rows)} task types)"
+    )
     console.print()
 
 
 # ─── TEMPLATES ────────────────────────────────────────────────────────────────
+
 
 def _product_squad():
     return """org:
@@ -294,6 +328,7 @@ def _product_squad():
       reports_to: TechLead
       tools: [github, browserbase]
 """
+
 
 def _startup_5():
     return """org:
@@ -327,6 +362,7 @@ def _startup_5():
       tools: [github, browserbase]
 """
 
+
 def _growth_squad():
     return """org:
   name: "Growth Squad"
@@ -352,6 +388,7 @@ def _growth_squad():
       reports_to: GrowthLead
       tools: [amplitude, notion]
 """
+
 
 def _creative_agency():
     return """org:
@@ -382,9 +419,10 @@ def _creative_agency():
 
 # ─── BENCHMARK ────────────────────────────────────────────────────────────────
 
+
 @cli.command()
 @click.option("--dry-run", is_flag=True, default=False, help="Run with zero API calls.")
-@click.option("--output",  default="benchmarks/results.json", show_default=True)
+@click.option("--output", default="benchmarks/results.json", show_default=True)
 def benchmark(dry_run, output):
     """Benchmark Conclave routing vs all-Haiku and all-Sonnet over 20 tasks."""
     from .benchmark import ConclaveBenchmark
@@ -392,6 +430,7 @@ def benchmark(dry_run, output):
 
     if dry_run:
         from .dry_run import DryRunClient
+
         client = DryRunClient()
         console.print("[yellow]⚠ [DRY RUN — no API calls made][/yellow]")
     else:
@@ -404,10 +443,10 @@ def benchmark(dry_run, output):
     s = report["summary"]
     t = Table(show_header=True, header_style="bold cyan")
     t.add_column("Category")
-    t.add_column("Haiku",    justify="right")
-    t.add_column("Sonnet",   justify="right")
+    t.add_column("Haiku", justify="right")
+    t.add_column("Sonnet", justify="right")
     t.add_column("Conclave", justify="right")
-    t.add_column("Quality",  justify="right")
+    t.add_column("Quality", justify="right")
     for cat in BENCHMARK_CATEGORIES:
         row = report["by_category"][cat]
         q = (row["quality"] / row["n"] * 100) if row["n"] else 0.0
@@ -438,16 +477,17 @@ def benchmark(dry_run, output):
 
 # ─── DASHBOARD ────────────────────────────────────────────────────────────────
 
+
 @cli.command()
-@click.option("--org",       default="conclave.yml", show_default=True)
-@click.option("--trail-dir", default=".conclave",    show_default=True)
-@click.option("--port",      default=7777,           show_default=True)
-@click.option("--host",      default="127.0.0.1",    show_default=True)
-@click.option("--no-open",   is_flag=True, default=False,
-              help="Do not auto-open the browser.")
+@click.option("--org", default="conclave.yml", show_default=True)
+@click.option("--trail-dir", default=".conclave", show_default=True)
+@click.option("--port", default=7777, show_default=True)
+@click.option("--host", default="127.0.0.1", show_default=True)
+@click.option("--no-open", is_flag=True, default=False, help="Do not auto-open the browser.")
 def dashboard(org, trail_dir, port, host, no_open):
     """Launch the Conclave dashboard at http://localhost:{port}"""
     import webbrowser
+
     try:
         import uvicorn
     except ImportError:

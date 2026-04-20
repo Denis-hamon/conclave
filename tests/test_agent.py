@@ -1,21 +1,33 @@
 """Unit tests for ConclaveAgent."""
+
 from __future__ import annotations
+
 import json
+
 from conclave.agent import ConclaveAgent, Message
 
 
 def _classifier_payload(**overrides):
-    base = {"novelty": 0.9, "complexity": 0.9,
-            "is_repetitive": False, "needs_filesystem": False,
-            "rationale": "complex"}
+    base = {
+        "novelty": 0.9,
+        "complexity": 0.9,
+        "is_repetitive": False,
+        "needs_filesystem": False,
+        "rationale": "complex",
+    }
     base.update(overrides)
     return json.dumps(base)
 
 
 def _make_agent(mock_client, **kwargs):
     defaults = dict(
-        role="Lead", persona="lead persona", org_name="TestOrg", tools=[],
-        reports_to=None, org_structure="Lead", deliberation="hierarchy",
+        role="Lead",
+        persona="lead persona",
+        org_name="TestOrg",
+        tools=[],
+        reports_to=None,
+        org_structure="Lead",
+        deliberation="hierarchy",
         client=mock_client,
     )
     defaults.update(kwargs)

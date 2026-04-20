@@ -16,17 +16,17 @@ If the beta is not available on the account, the backend falls back to
 AnthropicDirectBackend so user code keeps working. The fallback is loud —
 a single warning is emitted the first time it happens.
 """
+
 from __future__ import annotations
+
 import os
 import sys
 import warnings
-from typing import Optional
 
 import httpx
 
-from .base import AgentBackend, BackendResponse
 from .anthropic_direct import AnthropicDirectBackend
-
+from .base import AgentBackend, BackendResponse
 
 BETA_HEADER = "managed-agents-2026-04-01"
 DEFAULT_BASE_URL = "https://api.anthropic.com"
@@ -38,7 +38,7 @@ class ManagedAgentsBackend(AgentBackend):
     def __init__(
         self,
         client,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         base_url: str = DEFAULT_BASE_URL,
         http_timeout: float = 60.0,
     ):
@@ -46,7 +46,7 @@ class ManagedAgentsBackend(AgentBackend):
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
         self.base_url = base_url.rstrip("/")
         self._timeout = http_timeout
-        self._agent_ids: dict[str, str] = {}   # role → agent_id
+        self._agent_ids: dict[str, str] = {}  # role → agent_id
         self._fell_back = False
         self._fallback = AnthropicDirectBackend(client=client)
         self._http = httpx.Client(timeout=http_timeout, headers=self._headers())
@@ -92,8 +92,14 @@ class ManagedAgentsBackend(AgentBackend):
             return self._fallback.create_session(role, system, model)
 
     # ------------------------------------------------------------------
-    def send(self, session_id: str, messages: list[dict], model: str,
-             system: str, max_tokens: int = 1024) -> BackendResponse:
+    def send(
+        self,
+        session_id: str,
+        messages: list[dict],
+        model: str,
+        system: str,
+        max_tokens: int = 1024,
+    ) -> BackendResponse:
         if not session_id.startswith("managed:"):
             # We fell back earlier — stay in fallback mode for consistency.
             return self._fallback.send(session_id, messages, model, system, max_tokens)
@@ -107,7 +113,10 @@ class ManagedAgentsBackend(AgentBackend):
         try:
             r = self._http.post(
                 f"{self.base_url}/v1/sessions/{sid}/messages",
-                json={"content": last_user.get("content", ""), "max_tokens": max_tokens},
+                json={
+                    "content": last_user.get("content", ""),
+                    "max_tokens": max_tokens,
+                },
             )
             self._raise_for_beta(r)
             data = r.json()

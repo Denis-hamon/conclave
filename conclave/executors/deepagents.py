@@ -15,13 +15,14 @@ This decoupling is intentional:
 A TechLead in Conclave deliberates and writes a spec.
 A DeepAgents worker takes that spec and writes the actual code.
 """
+
 from __future__ import annotations
-from typing import Optional
 
 
 def is_deepagents_available() -> bool:
     try:
         import deepagents  # noqa: F401
+
         return True
     except ImportError:
         return False
@@ -31,8 +32,8 @@ def run_deepagents(
     task: str,
     role: str,
     model: str = "claude-sonnet-4-6",
-    tools: Optional[list] = None,
-    system_prompt: Optional[str] = None,
+    tools: list | None = None,
+    system_prompt: str | None = None,
 ) -> str:
     """
     Delegate a task to a DeepAgents harness.
@@ -60,16 +61,18 @@ def run_deepagents(
         system_prompt=system,
     )
 
-    result = agent.invoke({
-        "messages": [{"role": "user", "content": task}]
-    })
+    result = agent.invoke({"messages": [{"role": "user", "content": task}]})
 
     # DeepAgents returns a dict with "messages" — extract the last assistant message
     messages = result.get("messages", [])
     for msg in reversed(messages):
-        role_field = getattr(msg, "role", None) or (msg.get("role") if isinstance(msg, dict) else None)
+        role_field = getattr(msg, "role", None) or (
+            msg.get("role") if isinstance(msg, dict) else None
+        )
         if role_field == "assistant":
-            content = getattr(msg, "content", None) or (msg.get("content") if isinstance(msg, dict) else "")
+            content = getattr(msg, "content", None) or (
+                msg.get("content") if isinstance(msg, dict) else ""
+            )
             if isinstance(content, list):
                 # Handle tool-use blocks
                 for block in content:

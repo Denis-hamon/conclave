@@ -12,37 +12,39 @@ The agent accumulates a persistent conversation history (its "memory").
 The router prevents that history from becoming a pure token cost liability
 by using cheaper models when the task doesn't warrant Sonnet.
 """
+
 from __future__ import annotations
+
 import time
 from dataclasses import dataclass, field
-from typing import Optional
+
 import anthropic
 
-from .router import TaskRouter, ModelTier, ExecutorType
-from .executors.haiku_loop import HaikuCorrectionLoop
-from .executors.deepagents import run_deepagents
 from .cost import CostMeter
+from .executors.deepagents import run_deepagents
+from .executors.haiku_loop import HaikuCorrectionLoop
+from .router import ExecutorType, ModelTier, TaskRouter
 
 
 @dataclass
 class Message:
-    sender:       str
-    recipient:    str
-    content:      str
-    msg_type:     str = "message"
-    reasoning:    Optional[str] = None
-    timestamp:    float = field(default_factory=time.time)
-    model_used:   Optional[str] = None
-    iterations:   Optional[int] = None
-    tokens_saved: Optional[float] = None
+    sender: str
+    recipient: str
+    content: str
+    msg_type: str = "message"
+    reasoning: str | None = None
+    timestamp: float = field(default_factory=time.time)
+    model_used: str | None = None
+    iterations: int | None = None
+    tokens_saved: float | None = None
 
     def to_dict(self) -> dict:
         d = {
-            "ts":        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(self.timestamp)),
-            "from":      self.sender,
-            "to":        self.recipient,
-            "type":      self.msg_type,
-            "content":   self.content,
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(self.timestamp)),
+            "from": self.sender,
+            "to": self.recipient,
+            "type": self.msg_type,
+            "content": self.content,
             "reasoning": self.reasoning,
         }
         if self.model_used:
@@ -90,30 +92,30 @@ class ConclaveAgent:
 
     def __init__(
         self,
-        role:          str,
-        persona:       str,
-        org_name:      str,
-        tools:         list[str],
-        reports_to:    Optional[str],
+        role: str,
+        persona: str,
+        org_name: str,
+        tools: list[str],
+        reports_to: str | None,
         org_structure: str,
-        deliberation:  str,
-        client:        anthropic.Anthropic,
-        executor:      str = "native",
-        force_model:   Optional[str] = None,
-        backend:       str = "anthropic",
+        deliberation: str,
+        client: anthropic.Anthropic,
+        executor: str = "native",
+        force_model: str | None = None,
+        backend: str = "anthropic",
     ):
-        self.role        = role
-        self.persona     = persona
-        self.tools       = tools
-        self.reports_to  = reports_to or "nobody — you are the top of the hierarchy"
-        self.executor    = executor
+        self.role = role
+        self.persona = persona
+        self.tools = tools
+        self.reports_to = reports_to or "nobody — you are the top of the hierarchy"
+        self.executor = executor
         self.force_model = force_model
-        self.history:    list[dict] = []
-        self.client      = client
-        self.cost_meter  = CostMeter()
-        self._router     = TaskRouter(client)
+        self.history: list[dict] = []
+        self.client = client
+        self.cost_meter = CostMeter()
+        self._router = TaskRouter(client)
         self.backend_name = backend
-        self._backend   = None
+        self._backend = None
         self._session_id = None
 
         self._system = SYSTEM_TEMPLATE.format(
@@ -137,7 +139,7 @@ class ConclaveAgent:
         )
 
         if self.force_model:
-            decision.model    = ModelTier(self.force_model)
+            decision.model = ModelTier(self.force_model)
             decision.use_loop = False
 
         if decision.executor == ExecutorType.DEEPAGENTS:
@@ -149,14 +151,15 @@ class ConclaveAgent:
 
         self.history.append({"role": "assistant", "content": response_text})
         response = self._parse_response(response_text)
-        response.model_used   = decision.model.value
-        response.iterations   = iterations
+        response.model_used = decision.model.value
+        response.iterations = iterations
         response.tokens_saved = tokens_saved
         return response
 
     def _ensure_backend(self, model: str):
         if self._backend is None:
             from .backends import get_backend
+
             self._backend = get_backend(self.backend_name, client=self.client)
             self._session_id = self._backend.create_session(self.role, self._system, model)
         return self._backend
@@ -174,7 +177,7 @@ class ConclaveAgent:
         return resp.text, 1, 0.0
 
     def _run_haiku_loop(self, task: str, decision) -> tuple[str, int, float]:
-        loop   = HaikuCorrectionLoop(self.client, decision, self.role)
+        loop = HaikuCorrectionLoop(self.client, decision, self.role)
         result = loop.run(task)
         self.cost_meter.merge(result.cost_meter)
         return result.output, result.iterations, result.cost_meter.savings
@@ -185,17 +188,21 @@ class ConclaveAgent:
 
     def _parse_response(self, text: str) -> Message:
         lines, recipient, msg_type, reasoning, content_lines = (
-            text.strip().splitlines(), None, "message", None, []
+            text.strip().splitlines(),
+            None,
+            "message",
+            None,
+            [],
         )
         for line in lines:
             if line.startswith("[TO:"):
                 recipient = line.split(":")[1].strip().rstrip("]").strip()
-                msg_type  = "handoff"
+                msg_type = "handoff"
             elif line.startswith("[ESCALATE:"):
                 recipient = line.split(":")[1].strip().rstrip("]").strip()
-                msg_type  = "escalation"
+                msg_type = "escalation"
             elif line.startswith("[OUTPUT:"):
-                msg_type  = "output"
+                msg_type = "output"
                 content_lines.append(line)
             elif line.startswith("[REASONING:"):
                 reasoning = line.replace("[REASONING:", "").rstrip("]").strip()

@@ -7,32 +7,32 @@ No overhead, no side effects — pure observation.
 Each recorded action becomes a candidate for simulation:
 the raw material from which skillsets are distilled.
 """
+
 from __future__ import annotations
+
+import hashlib
 import json
 import time
-import hashlib
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional
-
 
 OBSERVATORY_DIR = Path(".conclave/observatory")
 
 
 @dataclass
 class ObservedAction:
-    action_id:     str
-    role:          str
-    task_type:     str          # inferred label e.g. "write_ticket", "weekly_summary"
-    model:         str
-    input:         str
-    output:        str
-    quality_score: float        # self-evaluated by Sonnet at record time
-    context_docs:  list[str]    # document names used
-    input_tokens:  int
+    action_id: str
+    role: str
+    task_type: str  # inferred label e.g. "write_ticket", "weekly_summary"
+    model: str
+    input: str
+    output: str
+    quality_score: float  # self-evaluated by Sonnet at record time
+    context_docs: list[str]  # document names used
+    input_tokens: int
     output_tokens: int
-    cost_usd:      float
-    ts:            str = field(default_factory=lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    cost_usd: float
+    ts: str = field(default_factory=lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -51,7 +51,7 @@ class Observatory:
     """
 
     def __init__(self, org_name: str):
-        self.org_name  = org_name
+        self.org_name = org_name
         self.store_dir = OBSERVATORY_DIR / org_name.lower().replace(" ", "_")
         self.store_dir.mkdir(parents=True, exist_ok=True)
         self._buffer: list[ObservedAction] = []
@@ -87,8 +87,7 @@ class Observatory:
     def stats(self) -> dict:
         actions = list(self.store_dir.glob("*.json"))
         total_cost = sum(
-            json.loads(p.read_text()).get("cost_usd", 0)
-            for p in actions if p.exists()
+            json.loads(p.read_text()).get("cost_usd", 0) for p in actions if p.exists()
         )
         return {
             "total_actions": len(actions),

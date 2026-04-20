@@ -13,8 +13,9 @@ a role. Today there are two production backends and one mock:
 The goal is that when Managed Agents GA ships, switching is a one-line YAML
 change (or a drop-in in the agent loop) — no rewrite.
 """
-from .base import AgentBackend, BackendResponse
+
 from .anthropic_direct import AnthropicDirectBackend
+from .base import AgentBackend, BackendResponse
 from .managed_agents import ManagedAgentsBackend
 
 

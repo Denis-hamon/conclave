@@ -4,51 +4,52 @@ conclave/certification/certifier.py + policy.py combined
 Certifier: reads a SimulationReport and emits a Certificate.
 Policy: the routing lookup table built from all valid certificates.
 """
+
 from __future__ import annotations
+
 import json
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 from .simulator import SimulationReport
 
-CERTS_DIR   = Path(".conclave/certificates")
+CERTS_DIR = Path(".conclave/certificates")
 POLICY_FILE = Path(".conclave/routing_policy.json")
 
 # Certification thresholds
-CERTIFIED_PASS_RATE    = 0.85   # ≥ 85% of runs pass
-CONDITIONAL_PASS_RATE  = 0.70   # 70-85% → CONDITIONAL
+CERTIFIED_PASS_RATE = 0.85  # ≥ 85% of runs pass
+CONDITIONAL_PASS_RATE = 0.70  # 70-85% → CONDITIONAL
 # < 70% → REJECTED
 
-CERT_TTL_DAYS = 90              # re-certify every 90 days
+CERT_TTL_DAYS = 90  # re-certify every 90 days
 
 
 class CertStatus(str, Enum):
-    CERTIFIED   = "CERTIFIED"    # route to Haiku in prod
+    CERTIFIED = "CERTIFIED"  # route to Haiku in prod
     CONDITIONAL = "CONDITIONAL"  # Haiku + 10% human validation sample
-    REJECTED    = "REJECTED"     # keep on Sonnet
+    REJECTED = "REJECTED"  # keep on Sonnet
 
 
 @dataclass
 class Certificate:
-    cert_id:          str
-    role:             str
-    task_type:        str
+    cert_id: str
+    role: str
+    task_type: str
     skillset_version: str
-    haiku_model:      str
-    sample_size:      int
-    pass_rate:        float
-    avg_quality:      float
-    avg_structural:   float
+    haiku_model: str
+    sample_size: int
+    pass_rate: float
+    avg_quality: float
+    avg_structural: float
     avg_completeness: float
-    avg_coherence:    float
-    cost_saving_pct:  float
-    status:           CertStatus
-    certified_at:     str
-    expires_at:       str
-    notes:            str = ""
+    avg_coherence: float
+    cost_saving_pct: float
+    status: CertStatus
+    certified_at: str
+    expires_at: str
+    notes: str = ""
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -66,7 +67,7 @@ class Certificate:
         return p
 
     @staticmethod
-    def load(cert_id: str) -> Optional["Certificate"]:
+    def load(cert_id: str) -> Certificate | None:
         p = CERTS_DIR / f"{cert_id}.json"
         if not p.exists():
             return None
@@ -75,7 +76,7 @@ class Certificate:
         return Certificate(**data)
 
     @staticmethod
-    def load_all() -> list["Certificate"]:
+    def load_all() -> list[Certificate]:
         if not CERTS_DIR.exists():
             return []
         certs = []
@@ -100,12 +101,9 @@ class Certifier:
         else:
             status = CertStatus.REJECTED
 
-        now        = time.strftime("%Y-%m-%d")
-        expires    = time.strftime(
-            "%Y-%m-%d",
-            time.gmtime(time.time() + CERT_TTL_DAYS * 86400)
-        )
-        cert_id    = f"{report.role.lower()}_{report.task_type}_{now}"
+        now = time.strftime("%Y-%m-%d")
+        expires = time.strftime("%Y-%m-%d", time.gmtime(time.time() + CERT_TTL_DAYS * 86400))
+        cert_id = f"{report.role.lower()}_{report.task_type}_{now}"
 
         notes = ""
         if status == CertStatus.REJECTED:
@@ -114,9 +112,7 @@ class Certifier:
                 f"Improve skillset and re-simulate."
             )
         elif status == CertStatus.CONDITIONAL:
-            notes = (
-                f"Pass rate {report.pass_rate:.0%} — routed to Haiku with 10% human validation."
-            )
+            notes = f"Pass rate {report.pass_rate:.0%} — routed to Haiku with 10% human validation."
 
         cert = Certificate(
             cert_id=cert_id,
@@ -143,6 +139,7 @@ class Certifier:
 # ---------------------------------------------------------------------------
 # Routing policy
 # ---------------------------------------------------------------------------
+
 
 class RoutingPolicy:
     """
@@ -175,16 +172,16 @@ class RoutingPolicy:
             existing = self._table.get(key)
             if not existing or cert.certified_at > existing["certified_at"]:
                 self._table[key] = {
-                    "status":           cert.status.value,
+                    "status": cert.status.value,
                     "skillset_version": cert.skillset_version,
-                    "cost_saving_pct":  cert.cost_saving_pct,
-                    "certified_at":     cert.certified_at,
-                    "expires_at":       cert.expires_at,
+                    "cost_saving_pct": cert.cost_saving_pct,
+                    "certified_at": cert.certified_at,
+                    "expires_at": cert.expires_at,
                 }
         POLICY_FILE.parent.mkdir(parents=True, exist_ok=True)
         POLICY_FILE.write_text(json.dumps(self._table, indent=2))
 
-    def lookup(self, role: str, task_type: str) -> Optional[dict]:
+    def lookup(self, role: str, task_type: str) -> dict | None:
         """Returns cert info if the task is Haiku-certified, None otherwise."""
         return self._table.get(self._key(role, task_type))
 
@@ -193,9 +190,11 @@ class RoutingPolicy:
         rows = []
         for key, info in self._table.items():
             role, task_type = key.split("::")
-            rows.append({
-                "role": role,
-                "task_type": task_type,
-                **info,
-            })
+            rows.append(
+                {
+                    "role": role,
+                    "task_type": task_type,
+                    **info,
+                }
+            )
         return sorted(rows, key=lambda r: (r["role"], r["task_type"]))

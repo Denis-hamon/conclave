@@ -5,8 +5,10 @@ Token cost tracking across all models.
 Shows in real-time what each routing decision costs,
 and what it would have cost if everything ran on Sonnet.
 """
+
 from __future__ import annotations
-from dataclasses import dataclass, field
+
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,34 +17,34 @@ if TYPE_CHECKING:
 
 # Cost per 1M tokens (USD, April 2026)
 COST_TABLE = {
-    "claude-haiku-4-5-20251001": {"input": 0.80,  "output": 4.00},
-    "claude-sonnet-4-6":         {"input": 3.00,  "output": 15.00},
-    "claude-opus-4-6":           {"input": 15.00, "output": 75.00},
+    "claude-haiku-4-5-20251001": {"input": 0.80, "output": 4.00},
+    "claude-sonnet-4-6": {"input": 3.00, "output": 15.00},
+    "claude-opus-4-6": {"input": 15.00, "output": 75.00},
 }
 
-BASELINE_MODEL = "claude-sonnet-4-6"   # "what if we had used Sonnet for everything"
+BASELINE_MODEL = "claude-sonnet-4-6"  # "what if we had used Sonnet for everything"
 
 
 @dataclass
 class ModelUsage:
-    model:         str
-    input_tokens:  int = 0
+    model: str
+    input_tokens: int = 0
     output_tokens: int = 0
 
     @property
     def cost_usd(self) -> float:
         rates = COST_TABLE.get(self.model, COST_TABLE[BASELINE_MODEL])
         return (
-            self.input_tokens  / 1_000_000 * rates["input"] +
-            self.output_tokens / 1_000_000 * rates["output"]
+            self.input_tokens / 1_000_000 * rates["input"]
+            + self.output_tokens / 1_000_000 * rates["output"]
         )
 
     @property
     def baseline_cost_usd(self) -> float:
         rates = COST_TABLE[BASELINE_MODEL]
         return (
-            self.input_tokens  / 1_000_000 * rates["input"] +
-            self.output_tokens / 1_000_000 * rates["output"]
+            self.input_tokens / 1_000_000 * rates["input"]
+            + self.output_tokens / 1_000_000 * rates["output"]
         )
 
 
@@ -52,18 +54,18 @@ class CostMeter:
     def __init__(self):
         self._usage: dict[str, ModelUsage] = {}
 
-    def record(self, model: "ModelTier", input_tokens: int, output_tokens: int):
-        key = str(model.value) if hasattr(model, 'value') else str(model)
+    def record(self, model: ModelTier, input_tokens: int, output_tokens: int):
+        key = str(model.value) if hasattr(model, "value") else str(model)
         if key not in self._usage:
             self._usage[key] = ModelUsage(model=key)
-        self._usage[key].input_tokens  += input_tokens
+        self._usage[key].input_tokens += input_tokens
         self._usage[key].output_tokens += output_tokens
 
-    def merge(self, other: "CostMeter"):
+    def merge(self, other: CostMeter):
         for key, usage in other._usage.items():
             if key not in self._usage:
                 self._usage[key] = ModelUsage(model=key)
-            self._usage[key].input_tokens  += usage.input_tokens
+            self._usage[key].input_tokens += usage.input_tokens
             self._usage[key].output_tokens += usage.output_tokens
 
     @property

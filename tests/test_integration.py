@@ -1,5 +1,7 @@
 """Integration test: full pipeline with mocked API."""
+
 from __future__ import annotations
+
 import json
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -7,16 +9,21 @@ from unittest.mock import MagicMock
 
 def _responder(call_counter):
     """Return deterministic responses based on system prompt heuristics."""
+
     def side_effect(**kwargs):
         system = kwargs.get("system", "") or ""
         resp = MagicMock()
         resp.usage = MagicMock(input_tokens=100, output_tokens=50)
         if "classifier" in system.lower() or "routing" in system.lower():
-            text = json.dumps({
-                "novelty": 0.8, "complexity": 0.7,
-                "is_repetitive": False, "needs_filesystem": False,
-                "rationale": "integration test",
-            })
+            text = json.dumps(
+                {
+                    "novelty": 0.8,
+                    "complexity": 0.7,
+                    "is_repetitive": False,
+                    "needs_filesystem": False,
+                    "rationale": "integration test",
+                }
+            )
         elif "evaluator" in system.lower():
             text = json.dumps({"score": 0.9, "passed": True, "feedback": ""})
         else:
@@ -27,12 +34,13 @@ def _responder(call_counter):
                 text = "[TO: TechLead]\nPlease spec this."
         resp.content = [MagicMock(text=text)]
         return resp
+
     return side_effect
 
 
 def test_full_run_product_squad(tmp_path: Path, monkeypatch):
-    from conclave.org import load_org
     from conclave.bus import Conclavebus
+    from conclave.org import load_org
 
     # Copy product_squad.yml to tmp
     src = Path(__file__).parent.parent / "examples" / "product_squad.yml"

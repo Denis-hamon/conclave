@@ -8,8 +8,11 @@ Full history is re-sent on every turn. It is the simplest possible backend
 and it is intentionally stable: Managed Agents is the forward path, this one
 is the baseline everything else is compared to.
 """
+
 from __future__ import annotations
+
 import uuid
+
 from .base import AgentBackend, BackendResponse
 
 
@@ -26,8 +29,14 @@ class AnthropicDirectBackend(AgentBackend):
         self._sessions[sid] = {"role": role, "system": system, "model": model}
         return sid
 
-    def send(self, session_id: str, messages: list[dict], model: str,
-             system: str, max_tokens: int = 1024) -> BackendResponse:
+    def send(
+        self,
+        session_id: str,
+        messages: list[dict],
+        model: str,
+        system: str,
+        max_tokens: int = 1024,
+    ) -> BackendResponse:
         resp = self.client.messages.create(
             model=model,
             max_tokens=max_tokens,

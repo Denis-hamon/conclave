@@ -7,16 +7,18 @@ Used by `conclave run --dry-run` and by examples/demo.py so the whole pipeline
 can be exercised (including the trail, cost meter, and deliberation flow)
 without an API key.
 """
+
 from __future__ import annotations
+
 import json
 import random
 from types import SimpleNamespace
-from typing import Optional
-
 
 FAKE_CLASSIFIER = {
-    "novelty": 0.6, "complexity": 0.6,
-    "is_repetitive": False, "needs_filesystem": False,
+    "novelty": 0.6,
+    "complexity": 0.6,
+    "is_repetitive": False,
+    "needs_filesystem": False,
     "rationale": "[dry-run]",
 }
 
@@ -29,10 +31,18 @@ _AVG_OUTPUT_TOKENS = 180
 
 
 class _Messages:
-    def __init__(self, parent: "DryRunClient"):
+    def __init__(self, parent: DryRunClient):
         self._parent = parent
 
-    def create(self, *, model: str, system: str = "", messages=None, max_tokens: int = 1024, **kwargs):
+    def create(
+        self,
+        *,
+        model: str,
+        system: str = "",
+        messages=None,
+        max_tokens: int = 1024,
+        **kwargs,
+    ):
         text = self._parent._synthesize(system=system, messages=messages or [], model=model)
         # Emulate Anthropic SDK response shape
         content = [SimpleNamespace(text=text, type="text")]
@@ -46,7 +56,7 @@ class _Messages:
 class DryRunClient:
     """Drop-in replacement for anthropic.Anthropic with zero API calls."""
 
-    def __init__(self, api_key: Optional[str] = None, **_kwargs):
+    def __init__(self, api_key: str | None = None, **_kwargs):
         self.api_key = api_key or "dry-run"
         self.messages = _Messages(self)
         self._turn = 0
@@ -93,12 +103,12 @@ class DryRunClient:
         for line in system.splitlines():
             if line.strip().startswith("You are the "):
                 # e.g. "You are the CPO in a multi-agent organization called ..."
-                tail = line.strip()[len("You are the "):]
+                tail = line.strip()[len("You are the ") :]
                 return tail.split(" ")[0]
         return "Agent"
 
     @staticmethod
-    def _extract_next_role(system: str, current_role: str) -> Optional[str]:
+    def _extract_next_role(system: str, current_role: str) -> str | None:
         """Pick a child role from the org hierarchy section (best effort)."""
         if not system:
             return None
@@ -117,8 +127,8 @@ class DryRunClient:
     @staticmethod
     def _task_fragment(role: str, next_role: str) -> str:
         fragments = [
-            f"Please pick this up and produce the next artifact.",
-            f"Handing this off — focus on the concrete deliverable.",
-            f"Your turn. Flag blockers early.",
+            "Please pick this up and produce the next artifact.",
+            "Handing this off — focus on the concrete deliverable.",
+            "Your turn. Flag blockers early.",
         ]
         return random.choice(fragments)

@@ -10,12 +10,12 @@ Endpoints:
   GET  /api/status    certification routing policy + cost summary
   GET  /api/events    SSE stream of new trail entries
 """
+
 from __future__ import annotations
+
 import asyncio
 import json
-import time
 from pathlib import Path
-from typing import Optional
 
 import yaml
 from fastapi import FastAPI
@@ -24,10 +24,12 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 _STATIC_DIR = Path(__file__).parent
 
 
-def _latest_trail(trail_dir: Path) -> Optional[Path]:
+def _latest_trail(trail_dir: Path) -> Path | None:
     if not trail_dir.exists():
         return None
-    candidates = sorted(trail_dir.glob("*trail*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)
+    candidates = sorted(
+        trail_dir.glob("*trail*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True
+    )
     return candidates[0] if candidates else None
 
 
@@ -51,17 +53,18 @@ def _org_payload(org_path: Path) -> dict:
     org = cfg.get("org", {})
     agents = []
     for a in org.get("agents", []):
-        agents.append({
-            "role": a["role"],
-            "reports_to": a.get("reports_to"),
-            "tools": a.get("tools", []),
-        })
+        agents.append(
+            {
+                "role": a["role"],
+                "reports_to": a.get("reports_to"),
+                "tools": a.get("tools", []),
+            }
+        )
     return {"name": org.get("name", "Conclave Org"), "agents": agents}
 
 
 def _status_payload(trail_dir: Path) -> dict:
     """Aggregate cost across the latest trail (best effort — derived from tokens_saved_usd)."""
-    from ..cost import COST_TABLE, BASELINE_MODEL
     trail = _latest_trail(trail_dir)
     entries = _load_trail_entries(trail, limit=1000) if trail else []
 
@@ -116,10 +119,12 @@ def create_app(org_path: Path, trail_dir: Path) -> FastAPI:
     def api_trail(limit: int = 200):
         trail = _latest_trail(trail_dir)
         entries = _load_trail_entries(trail, limit=limit)
-        return JSONResponse({
-            "trail": entries,
-            "trail_file": str(trail) if trail else None,
-        })
+        return JSONResponse(
+            {
+                "trail": entries,
+                "trail_file": str(trail) if trail else None,
+            }
+        )
 
     @app.get("/api/status")
     def api_status():
@@ -140,6 +145,7 @@ def create_app(org_path: Path, trail_dir: Path) -> FastAPI:
                         if entries:
                             yield f"data: {json.dumps(entries[-1])}\n\n"
                 await asyncio.sleep(0.5)
+
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     return app
