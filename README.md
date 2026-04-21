@@ -18,11 +18,14 @@ Define your organization in YAML. Give it a goal. Watch your agents deliberate.
 ```bash
 # From source (PyPI publish coming)
 git clone https://github.com/Denis-hamon/conclave && cd conclave
-pip install -e ".[dev]"
+pip install -e ".[dev,dashboard]"
 
-conclave init --template product-squad        # creates conclave.yml
-conclave run "Your goal here" --dry-run        # no API key needed
-export ANTHROPIC_API_KEY=sk-ant-...
+conclave init --template product-squad          # creates conclave.yml
+conclave run "Your goal here" --dry-run          # no API key needed
+conclave trail view --latest                     # render the trail as Mermaid
+conclave dashboard                               # live control-plane UI
+
+export ANTHROPIC_API_KEY=sk-ant-...              # then run for real
 conclave run "Your goal here"
 ```
 
@@ -206,6 +209,39 @@ conclave trail view --latest --format timeline # ASCII timeline
 conclave trail view .conclave/trail.jsonl > trail.md
 ```
 
+Drop the Mermaid output into a pull request description or a postmortem, and the JSONL audit becomes a diagram any stakeholder can read:
+
+```mermaid
+sequenceDiagram
+  participant CPO
+  participant TechLead
+  participant QA
+  CPO ->> TechLead: delegation: Spec auth, idempotency, rollback
+  TechLead -->> QA: handoff: Prioritize payment edge cases
+  QA ->> CPO: escalation: payment-service v3 not in staging
+  Note over QA: escalation
+```
+
+---
+
+## Dashboard
+
+A live control-plane UI ships with the framework — FastAPI backend, single-file dark UI built on the [Claude / Anthropic design system](dashboard-ui/DESIGN.md) (generated with `npx getdesign add claude`):
+
+```bash
+conclave dashboard                 # http://localhost:7777
+```
+
+The dashboard gives you:
+
+- **Sidebar**: org hierarchy tree + certification share
+- **4 MetricCards**: agents · deliberations today · spend · routing savings
+- **4 ChartCards (14d)**: run activity · handoff types · cost by role · model routing split
+- **Dual feed**: live activity stream (SSE, with "just arrived" pulse) + recent outputs
+- **Incident banner** slot for budget/policy alerts
+
+Conclave's edge over polling-based control planes is a real SSE stream off the Decision Trail file — when an agent writes, the dashboard lights up within 500 ms.
+
 ---
 
 ## Deliberation modes
@@ -252,15 +288,27 @@ conclave init --template claude-code-squad  # Planner, Implementer, Reviewer, Te
 
 ## Roadmap
 
-- [x] Core agent bus + deliberation engine
-- [x] Decision Trail
-- [x] YAML org definition
-- [x] MCP integrations (Notion, Linear, GitHub, Slack)
-- [ ] `conclave simulate` — dry-run mode, no tools fired
-- [ ] Org memory dashboard (local web UI)
+Shipped:
+
+- [x] Core agent bus + deliberation engine (`hierarchy` / `consensus` / `first-valid`)
+- [x] Decision Trail (JSONL, always on)
+- [x] YAML org definition + 5 templates (`product-squad`, `startup-5`, `growth-squad`, `creative-agency`, `claude-code-squad`)
+- [x] MCP-ready tool declarations
+- [x] Haiku ↔ Sonnet routing with classifier (+ certification loop)
+- [x] `conclave simulate` — Haiku replay on observed actions
+- [x] `conclave trail view` — Mermaid / ASCII renderer
+- [x] Dashboard (FastAPI + SSE, Claude design system)
+- [x] `conclave benchmark` — 20-task cost/quality harness
+- [x] PyPI trusted publishing via OIDC
+- [x] CodeQL + Codecov + mypy advisory in CI
+
+Next:
+
+- [ ] `conclave replay` — re-run a past trail with a different deliberation strategy
 - [ ] Role marketplace (community-contributed personas)
 - [ ] Native Managed Agents multi-session API (in sync with Anthropic GA)
-- [ ] `conclave replay` — re-run a past trail with a different deliberation strategy
+- [ ] Pyodide-powered in-browser demo
+- [ ] Dashboard v3: React/Vite/shadcn rewrite using `dashboard-ui/DESIGN.md` as source of truth
 
 ---
 
@@ -289,9 +337,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Built on
 
-- [Anthropic Managed Agents](https://docs.anthropic.com/managed-agents)
-- [Model Context Protocol](https://modelcontextprotocol.io)
-- Claude Sonnet 4
+- [Anthropic Managed Agents](https://docs.anthropic.com/managed-agents) — the agent primitive
+- [Model Context Protocol](https://modelcontextprotocol.io) — the tool primitive
+- Claude Haiku 4.5 / Sonnet 4.6 — the model tiers that back routing decisions
+- [getdesign](https://www.npmjs.com/package/getdesign) `add claude` — dashboard tokens
 
 ---
 

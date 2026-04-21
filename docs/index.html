@@ -461,6 +461,7 @@
       <a href="#why">Why</a>
       <a href="#how">How it works</a>
       <a href="#architecture">Architecture</a>
+      <a href="#dashboard">Dashboard</a>
       <a href="#benchmark">Comparison</a>
       <a class="pill" href="https://github.com/Denis-hamon/conclave">GitHub ↗</a>
     </div>
@@ -496,7 +497,7 @@
         <div class="meta">
           <span><strong>Conclave contributors</strong> · reference implementation</span>
           <span>MIT licensed</span>
-          <span>21 tests · CI green</span>
+          <span>27 tests · CI green · CodeQL</span>
         </div>
       </div>
 
@@ -626,7 +627,12 @@
       <article class="feat-item">
         <div class="num">— 03</div>
         <h3>Decision Trail, always on.</h3>
-        <p>Every inter-agent message lands in a JSONL trail with sender, recipient, reasoning, and cost. Replayable, diffable, postmortem-ready.</p>
+        <p>Every inter-agent message lands in a JSONL trail with sender, recipient, reasoning, and cost. Render it as a Mermaid <code>sequenceDiagram</code> with <code>conclave trail view</code> — postmortem-ready in one command.</p>
+      </article>
+      <article class="feat-item">
+        <div class="num">— 04</div>
+        <h3>Live control plane.</h3>
+        <p>A single-file dashboard ships with the framework — four MetricCards, four ChartCards, a live SSE activity stream, and a dual feed. Visually grounded in the Anthropic design system.</p>
       </article>
     </div>
   </div>
@@ -815,10 +821,54 @@
   </div>
 </section>
 
+<!-- ========== DASHBOARD ========== -->
+<section id="dashboard">
+  <div class="container">
+    <span class="section-label">04 · Observability</span>
+    <h2>A control plane, not a log tail.</h2>
+    <p class="intro">
+      A live dashboard ships with the framework — single file, dark surface, built on
+      the tokens <code>npx getdesign add claude</code> produces. It gives you the state
+      of the deliberating org in one screen: metric cards, 14-day charts, and a dual
+      feed that reacts to the SSE stream off the Decision Trail.
+    </p>
+
+    <div class="two-col">
+      <div>
+        <div class="code-label">launch it</div>
+        <pre><code><span class="tok-c">$ conclave dashboard</span>
+◆ Conclave Dashboard → http://localhost:7777</code></pre>
+        <p style="color: var(--ink-2); font-size: 15px; margin-top: 20px;">
+          The dashboard is powered by the same JSONL trail that <code>conclave trail view</code>
+          renders as Mermaid. Pollers that target Anthropic agents typically refetch every
+          few seconds — Conclave emits events on <code>/api/events</code> as soon as the
+          trail file changes, so a new handoff appears in under 500 ms.
+        </p>
+      </div>
+      <div>
+        <div class="code-label">layout</div>
+        <ul style="color: var(--ink-2); font-size: 15px; line-height: 1.7; padding-left: 20px;">
+          <li><strong>Sidebar</strong> — org hierarchy tree + certification share progress.</li>
+          <li><strong>4 MetricCards</strong> — agents · deliberations today · spend · routing savings.</li>
+          <li><strong>4 ChartCards (14d)</strong> — run activity · handoffs by type · cost by role · model routing split.</li>
+          <li><strong>Dual feed</strong> — live activity (SSE, with "just arrived" pulse) + recent outputs.</li>
+          <li><strong>Incident banner</strong> slot for budget or policy alerts.</li>
+        </ul>
+        <p style="color: var(--ink-dim); font-size: 13px; margin-top: 20px;">
+          Warm dark palette (<code>#141413</code> / <code>#30302e</code>), terracotta accent
+          (<code>#c96442</code>) reserved for live indicators and CTAs, serif headlines
+          (Fraunces as Anthropic Serif proxy). No cool grays — every neutral has a
+          yellow-brown undertone, consistent with the Claude design system.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ========== ROUTING ========== -->
 <section>
   <div class="container">
-    <span class="section-label">04 · Routing</span>
+    <span class="section-label">05 · Routing</span>
     <h2>Each task is classified before it runs.</h2>
     <p class="intro">
       A persistent agent's history grows with every turn. We refuse to pay
@@ -904,7 +954,7 @@
 <!-- ========== DELIBERATION ========== -->
 <section>
   <div class="container">
-    <span class="section-label">05 · Deliberation</span>
+    <span class="section-label">06 · Deliberation</span>
     <h2>A full exchange, inspectable end to end.</h2>
     <p class="intro">
       Every handoff is a message with explicit sender, recipient, type
@@ -1019,7 +1069,7 @@
 <!-- ========== COMPARISON ========== -->
 <section id="benchmark">
   <div class="container">
-    <span class="section-label">06 · Positioning</span>
+    <span class="section-label">07 · Positioning</span>
     <h2>Where it sits next to existing tools.</h2>
     <p class="intro">
       Multi-agent frameworks have proliferated. Most rebuild primitives
@@ -1113,7 +1163,7 @@
 <!-- ========== INTEGRATE ========== -->
 <section id="integrate">
   <div class="container">
-    <span class="section-label">07 · Try it</span>
+    <span class="section-label">08 · Try it</span>
     <h2>Zero config. No API key for the dry-run.</h2>
     <p class="intro">
       Install, initialize from a template, simulate the full pipeline —
@@ -1127,8 +1177,11 @@
 <span class="tok-c">$ conclave init --template product-squad</span>
 <span class="tok-c">$ conclave run "Your goal" --dry-run</span></code></pre>
         <div class="code-label">observe live</div>
-        <pre><code><span class="tok-c">$ conclave dashboard</span>
+        <pre style="margin-bottom: 20px;"><code><span class="tok-c">$ conclave dashboard</span>
 ◆ Conclave Dashboard → http://localhost:7777</code></pre>
+        <div class="code-label">share a trail</div>
+        <pre><code><span class="tok-c">$ conclave trail view --latest &gt; trail.md</span>
+# Mermaid sequenceDiagram, renders on GitHub</code></pre>
       </div>
       <div>
         <div class="code-label">benchmark — 20 canonical tasks</div>
@@ -1206,7 +1259,8 @@ TOTAL         $0.042   $0.312   $0.091      94%</code></pre>
       credit the primitives Conclave is built on.
     </p>
     <p class="colophon">
-      Set in Sentient &amp; Switzer · IBM Plex Mono for code
+      Site: Sentient &amp; Switzer · IBM Plex Mono for code ·
+      Dashboard: Fraunces &amp; Inter · JetBrains Mono
     </p>
   </div>
 </footer>
