@@ -13,7 +13,7 @@ import yaml
 from .agent import ConclaveAgent
 
 
-def _build_org_structure(agents_cfg: list[dict]) -> str:
+def _build_org_structure(agents_cfg: list[dict[str, object]]) -> str:
     lines = []
     for a in agents_cfg:
         role = a["role"]

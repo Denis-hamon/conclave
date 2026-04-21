@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **In-browser demo** — `docs/demo/` ships a Pyodide-powered page that boots Conclave's dry-run pipeline in a browser tab. No install, no API key, no backend. Drives the same Mermaid renderer + cost meter as the CLI.
+- **CLI test coverage** — 10 new tests in `tests/test_cli.py` using `click.testing.CliRunner`: help output, all 5 templates, overwrite protection, trail view (mermaid + timeline), replay round-trip, benchmark dry-run.
+- **2 more modules in the strict mypy lock-in** — `conclave.dry_run` and `conclave.org` join the `strict = true` override. 6 modules total now gate on strict typing in CI.
+- **Release notes** — `docs/RELEASE-NOTES-v0.1.0.md` ready to copy into the GitHub Release body once `v0.1.0` is tagged.
 - **`conclave replay --real`** — opt into real API calls for a replay. Default stays dry-run so no credit burns unless explicitly requested.
 - **mypy strict baseline (4 modules):** `conclave.cost`, `conclave.replay`, `conclave.router`, `conclave.trail_view` are now locked in under `strict = true` in `pyproject.toml`. Progressive adoption: additional modules join this list as they clean up.
 - **6 new unit tests** for `DryRunClient` covering response shape, classifier/evaluator routing, and kwargs tolerance. Coverage on `conclave.dry_run` moves from 0% to 82%; overall coverage from 37% to 43%.

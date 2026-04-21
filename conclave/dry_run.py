@@ -31,7 +31,7 @@ _AVG_OUTPUT_TOKENS = 180
 
 
 class _Messages:
-    def __init__(self, parent: DryRunClient):
+    def __init__(self, parent: DryRunClient) -> None:
         self._parent = parent
 
     def create(
@@ -39,10 +39,10 @@ class _Messages:
         *,
         model: str,
         system: str = "",
-        messages=None,
+        messages: list[dict[str, object]] | None = None,
         max_tokens: int = 1024,
-        **kwargs,
-    ):
+        **kwargs: object,
+    ) -> SimpleNamespace:
         text = self._parent._synthesize(system=system, messages=messages or [], model=model)
         # Emulate Anthropic SDK response shape
         content = [SimpleNamespace(text=text, type="text")]
@@ -56,7 +56,7 @@ class _Messages:
 class DryRunClient:
     """Drop-in replacement for anthropic.Anthropic with zero API calls."""
 
-    def __init__(self, api_key: str | None = None, **_kwargs):
+    def __init__(self, api_key: str | None = None, **_kwargs: object) -> None:
         self.api_key = api_key or "dry-run"
         self.messages = _Messages(self)
         self._turn = 0
@@ -64,7 +64,7 @@ class DryRunClient:
     # ------------------------------------------------------------------
     # Response synthesis
     # ------------------------------------------------------------------
-    def _synthesize(self, *, system: str, messages: list, model: str) -> str:
+    def _synthesize(self, *, system: str, messages: list[dict[str, object]], model: str) -> str:
         sys_lower = (system or "").lower()
 
         if "classifier" in sys_lower or "routing" in sys_lower:

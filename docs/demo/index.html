@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Conclave — in-browser demo</title>
+  <meta name="description" content="Try Conclave's dry-run pipeline straight in the browser. No install, no API key, no backend. Powered by Pyodide." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Tokens from dashboard-ui/DESIGN.md (Claude / Anthropic) */
+    :root {
+      --bg:            #141413;
+      --surface:       #1a1a19;
+      --surface-2:     #30302e;
+      --border:        #2a2a28;
+      --fg:            #f5f4ed;
+      --fg-soft:       #b0aea5;
+      --fg-dim:        #87867f;
+      --terracotta:    #c96442;
+      --coral:         #d97757;
+      --sage:          #7a8b6f;
+      --crimson:       #b53333;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 15px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    .serif { font-family: 'Fraunces', Georgia, serif; font-weight: 500; letter-spacing: -0.01em; }
+    .mono  { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+    header {
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 22px; font-weight: 500; margin: 0;
+      letter-spacing: -0.015em;
+    }
+    header h1 .mark { color: var(--terracotta); }
+    header .tag {
+      color: var(--fg-dim); font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-left: 8px;
+    }
+    header a { color: var(--fg-soft); text-decoration: none; font-size: 13px; }
+    header a:hover { color: var(--fg); }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+    h2 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-weight: 500; letter-spacing: -0.015em;
+      font-size: 30px; margin: 0 0 6px;
+    }
+    .lede { color: var(--fg-soft); font-size: 16px; max-width: 68ch; margin: 0 0 28px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .panel h3 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 18px; font-weight: 500; margin: 0 0 16px;
+      letter-spacing: -0.01em;
+    }
+    label {
+      display: block; margin-bottom: 6px;
+      color: var(--fg-soft); font-size: 12px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    select, textarea, input[type="text"] {
+      width: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+    select:focus, textarea:focus, input:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
+    textarea { min-height: 70px; resize: vertical; font-family: 'Inter', sans-serif; }
+
+    button {
+      background: var(--terracotta);
+      color: var(--fg);
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover { background: var(--coral); }
+    button:disabled { background: var(--surface-2); color: var(--fg-dim); cursor: not-allowed; }
+
+    .status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--fg-dim);
+      margin-top: 14px;
+      min-height: 18px;
+    }
+    .status.ok    { color: var(--sage); }
+    .status.err   { color: var(--crimson); }
+    .status .dot  {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor; margin-right: 6px; vertical-align: middle;
+      animation: pulse 2s ease-out infinite;
+    }
+    @keyframes pulse { 0%,100% {opacity:1;} 50% {opacity:.35;} }
+
+    .output {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0;
+      min-height: 500px;
+      display: flex; flex-direction: column;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .tabs button {
+      background: transparent;
+      color: var(--fg-dim);
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      padding: 14px 20px;
+      width: auto;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .tabs button.active {
+      color: var(--fg);
+      border-bottom-color: var(--terracotta);
+    }
+    .tab-body {
+      flex: 1;
+      padding: 20px 24px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--fg-soft);
+    }
+    .tab-body.hidden { display: none; }
+    .tab-body .role { color: var(--terracotta); font-weight: 500; }
+    .tab-body .meta { color: var(--fg-dim); }
+    .tab-body .dim  { color: var(--fg-dim); font-style: italic; }
+
+    footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--fg-dim);
+      font-size: 13px;
+    }
+    footer a { color: var(--coral); text-decoration: none; }
+
+    .boot-log { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--fg-dim); white-space: pre-wrap; max-height: 160px; overflow-y: auto; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.28.5/full/pyodide.js"></script>
+</head>
+<body>
+  <header>
+    <h1><span class="mark">◆</span> Conclave <span class="tag">in-browser demo</span></h1>
+    <a href="https://github.com/Denis-hamon/conclave">GitHub ↗</a>
+  </header>
+
+  <main>
+    <h2 class="serif">Run a dry deliberation, no install.</h2>
+    <p class="lede">
+      A small Python runtime loads in the tab below (via Pyodide). We install a
+      stripped-down build of Conclave in it, then run <code>ConclaveBus</code> against
+      one of the built-in org templates. Zero API key, zero backend — the same
+      <code>DryRunClient</code> that powers the Python CLI's <code>--dry-run</code>.
+    </p>
+
+    <div class="grid">
+      <!-- ─── Left: controls ────────────────────────────────────────── -->
+      <section class="panel">
+        <h3>Configure</h3>
+
+        <label for="tpl">Org template</label>
+        <select id="tpl">
+          <option value="product-squad">product-squad — CPO · TechLead · QA</option>
+          <option value="claude-code-squad">claude-code-squad — Planner · Implementer · Reviewer · Tester</option>
+          <option value="startup-5">startup-5 — CEO · CPO · CTO · Designer · QA</option>
+          <option value="growth-squad">growth-squad — CMO · GrowthLead · ContentStrategist · DataAnalyst</option>
+          <option value="creative-agency">creative-agency — CreativeDirector · Copywriter · ArtDirector · PM</option>
+        </select>
+
+        <label for="delib">Deliberation</label>
+        <select id="delib">
+          <option value="hierarchy">hierarchy (default)</option>
+          <option value="consensus">consensus</option>
+          <option value="first-valid">first-valid</option>
+        </select>
+
+        <label for="goal">Goal</label>
+        <textarea id="goal" rows="3">Design a payment flow that handles auth, idempotency, and rollback.</textarea>
+
+        <button id="run" disabled>Loading Python…</button>
+
+        <div class="status" id="status"><span class="dot"></span> booting Pyodide…</div>
+        <pre class="boot-log" id="bootlog" aria-live="polite"></pre>
+      </section>
+
+      <!-- ─── Right: output ──────────────────────────────────────────── -->
+      <section class="output">
+        <div class="tabs" role="tablist">
+          <button class="active" data-tab="trail">Trail</button>
+          <button data-tab="mermaid">Mermaid</button>
+          <button data-tab="cost">Cost</button>
+        </div>
+        <pre class="tab-body" id="tab-trail">Run a deliberation to see the Decision Trail here.</pre>
+        <pre class="tab-body hidden" id="tab-mermaid">Mermaid sequenceDiagram will appear here — copy-paste into any GitHub README.</pre>
+        <pre class="tab-body hidden" id="tab-cost">Token cost breakdown appears here after a run.</pre>
+      </section>
+    </div>
+
+    <footer>
+      Built with <a href="https://pyodide.org/">Pyodide 0.28</a> · Same Conclave code
+      that powers the CLI, stripped of I/O so it runs in a WebAssembly Python.
+      Read the <a href="https://github.com/Denis-hamon/conclave#readme">README</a>
+      to install the real thing.
+    </footer>
+  </main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const bootlog = $('bootlog');
+const status = $('status');
+function log(msg) { bootlog.textContent += msg + '\n'; bootlog.scrollTop = bootlog.scrollHeight; }
+function setStatus(msg, cls='') { status.className = 'status ' + cls; status.innerHTML = (cls ? '<span class="dot"></span> ' : '') + msg; }
+
+/* ─── Tab switching ──────────────────────────────────────────────── */
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-body').forEach(b => b.classList.add('hidden'));
+    $('tab-' + btn.dataset.tab).classList.remove('hidden');
+  };
+});
+
+/* ─── Pyodide bootstrap ──────────────────────────────────────────── */
+let pyodide = null;
+
+async function boot() {
+  try {
+    log('• loading Pyodide runtime (WASM, ~10 MB)…');
+    pyodide = await loadPyodide();
+    log('• Pyodide ' + pyodide.version + ' ready');
+
+    log('• installing pyyaml via micropip…');
+    await pyodide.loadPackage('micropip');
+    await pyodide.runPythonAsync(`
+import micropip
+await micropip.install('pyyaml')
+    `);
+    log('• pyyaml installed');
+
+    log('• loading Conclave demo module…');
+    const pyResp = await fetch('./conclave_demo.py');
+    if (!pyResp.ok) throw new Error('could not fetch conclave_demo.py');
+    const pyCode = await pyResp.text();
+    await pyodide.runPythonAsync(pyCode);
+    log('• ready.');
+    setStatus('ready', 'ok');
+    $('run').disabled = false;
+    $('run').textContent = 'Run dry deliberation';
+  } catch (e) {
+    setStatus('boot failed: ' + e.message, 'err');
+    log('✗ ' + e);
+  }
+}
+
+/* ─── Run handler ────────────────────────────────────────────────── */
+$('run').onclick = async () => {
+  $('run').disabled = true;
+  $('run').textContent = 'Running…';
+  setStatus('deliberating…');
+
+  const template = $('tpl').value;
+  const delib = $('delib').value;
+  const goal = $('goal').value.trim() || 'No goal specified';
+
+  try {
+    pyodide.globals.set('template_name', template);
+    pyodide.globals.set('delib_name', delib);
+    pyodide.globals.set('goal_text', goal);
+
+    const result = await pyodide.runPythonAsync(`
+run_demo(template_name, delib_name, goal_text)
+    `);
+    const r = result.toJs({ dict_converter: Object.fromEntries });
+
+    $('tab-trail').textContent = r.trail_text || '(empty)';
+    $('tab-mermaid').textContent = r.mermaid || '(empty)';
+    $('tab-cost').textContent = r.cost || '(empty)';
+
+    setStatus(r.summary || 'complete', 'ok');
+  } catch (e) {
+    setStatus('run failed: ' + e.message, 'err');
+    $('tab-trail').textContent = e.toString();
+  } finally {
+    $('run').disabled = false;
+    $('run').textContent = 'Run dry deliberation';
+  }
+};
+/* ─── Python module loaded from ./conclave_demo.py at boot time. ── */
+
+
+boot();
+</script>
+</body>
+</html>

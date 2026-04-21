@@ -22,7 +22,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
       - name: mypy (strict — locked-in modules)
-        run: mypy --strict conclave/cost.py conclave/replay.py conclave/router.py conclave/trail_view.py
+        run: mypy --strict conclave/cost.py conclave/dry_run.py conclave/org.py conclave/replay.py conclave/router.py conclave/trail_view.py
       - name: mypy (advisory — whole package, non-blocking)
         run: mypy conclave || echo "::warning::mypy baseline not clean — advisory only"
 

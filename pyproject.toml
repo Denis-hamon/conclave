@@ -107,6 +107,8 @@ check_untyped_defs = false
 # Add a module to this list only once it is fully strict-clean.
 module = [
     "conclave.cost",
+    "conclave.dry_run",
+    "conclave.org",
     "conclave.replay",
     "conclave.router",
     "conclave.trail_view",
