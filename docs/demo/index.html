@@ -186,7 +186,7 @@
 
     .boot-log { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--fg-dim); white-space: pre-wrap; max-height: 160px; overflow-y: auto; }
   </style>
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.28.5/full/pyodide.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
 </head>
 <body>
   <header>
@@ -247,7 +247,7 @@
     </div>
 
     <footer>
-      Built with <a href="https://pyodide.org/">Pyodide 0.28</a> · Same Conclave code
+      Built with <a href="https://pyodide.org/">Pyodide 0.27</a> · Same Conclave code
       that powers the CLI, stripped of I/O so it runs in a WebAssembly Python.
       Read the <a href="https://github.com/Denis-hamon/conclave#readme">README</a>
       to install the real thing.
@@ -280,13 +280,9 @@ async function boot() {
     pyodide = await loadPyodide();
     log('• Pyodide ' + pyodide.version + ' ready');
 
-    log('• installing pyyaml via micropip…');
-    await pyodide.loadPackage('micropip');
-    await pyodide.runPythonAsync(`
-import micropip
-await micropip.install('pyyaml')
-    `);
-    log('• pyyaml installed');
+    log('• loading pyyaml (prebuilt)…');
+    await pyodide.loadPackage('pyyaml');
+    log('• pyyaml loaded');
 
     log('• loading Conclave demo module…');
     const pyResp = await fetch('./conclave_demo.py');
