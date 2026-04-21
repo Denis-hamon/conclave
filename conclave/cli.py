@@ -678,9 +678,7 @@ def replay(trail_file, latest, trail_dir, org, deliberation, real):
     final_delib = deliberation or default_delib
     replay_entry = entry_role or entry_from_meta
 
-    out_path = (
-        Path(trail_dir) / f"replay_of_{path.stem}_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
-    )
+    out_path = Path(trail_dir) / f"replay_of_{path.stem}_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
 
     console.print(
         Panel(

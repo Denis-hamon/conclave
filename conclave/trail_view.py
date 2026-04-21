@@ -70,11 +70,11 @@ def latest_trail(trail_dir: Path) -> Path | None:
 # Map Conclave message types to Mermaid sequenceDiagram arrow syntax.
 # Ref: https://mermaid.js.org/syntax/sequenceDiagram.html
 _ARROWS = {
-    "delegation": "->>",   # solid arrow with head
-    "handoff":    "-->>",  # dashed arrow with head
-    "escalation": "->>",   # solid — visually highlighted via Note over
-    "output":     "-)",    # async arrow (open head) — signals "final artifact"
-    "message":    "->>",
+    "delegation": "->>",  # solid arrow with head
+    "handoff": "-->>",  # dashed arrow with head
+    "escalation": "->>",  # solid — visually highlighted via Note over
+    "output": "-)",  # async arrow (open head) — signals "final artifact"
+    "message": "->>",
 }
 
 
@@ -146,10 +146,10 @@ def to_timeline(entries: list[TrailEntry]) -> str:
     for e in entries:
         arrow = {
             "delegation": "──>",
-            "handoff":    "─ ─>",
+            "handoff": "─ ─>",
             "escalation": "══>",
-            "output":     "─◆",
-            "message":    "───",
+            "output": "─◆",
+            "message": "───",
         }.get(e.msg_type, "───")
         left = e.from_role.ljust(role_width)
         right = e.to_role.ljust(role_width)

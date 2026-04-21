@@ -26,8 +26,13 @@ def test_extract_meta_reads_first_line(tmp_path: Path) -> None:
                 "roles": ["CPO", "TechLead", "QA"],
                 "max_turns": 10,
             },
-            {"ts": "2026-04-21T10:00:01Z", "from": "user", "to": "CPO", "type": "delegation",
-             "content": "Spec the checkout API"},
+            {
+                "ts": "2026-04-21T10:00:01Z",
+                "from": "user",
+                "to": "CPO",
+                "type": "delegation",
+                "content": "Spec the checkout API",
+            },
         ],
     )
     meta = extract_meta(path)

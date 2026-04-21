@@ -117,7 +117,9 @@ def _metrics_payload(org_path: Path, trail_dir: Path) -> dict[str, Any]:
     since_today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     today = _load_all_entries(trail_dir, since=since_today)
     # A deliberation ~= a single trail file; approximate by unique goal/run keys.
-    trails_today = len({t.name for t in _all_trails(trail_dir) if t.stat().st_mtime >= since_today.timestamp()})
+    trails_today = len(
+        {t.name for t in _all_trails(trail_dir) if t.stat().st_mtime >= since_today.timestamp()}
+    )
 
     cost_today = 0.0
     saved_today = 0.0
@@ -221,9 +223,7 @@ def create_app(org_path: Path, trail_dir: Path) -> FastAPI:
     def api_trail(limit: int = 200) -> JSONResponse:
         trail = _latest_trail(trail_dir)
         entries = _load_trail_entries(trail, limit=limit)
-        return JSONResponse(
-            {"trail": entries, "trail_file": str(trail) if trail else None}
-        )
+        return JSONResponse({"trail": entries, "trail_file": str(trail) if trail else None})
 
     @app.get("/api/metrics")
     def api_metrics() -> JSONResponse:

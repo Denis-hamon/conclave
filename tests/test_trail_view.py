@@ -36,12 +36,27 @@ def test_mermaid_renders_participants_and_arrows(tmp_path: Path) -> None:
     path = _write_trail(
         tmp_path,
         [
-            {"ts": "2026-04-20T10:00:00Z", "from": "CPO", "to": "TechLead",
-             "type": "delegation", "content": "Build auth"},
-            {"ts": "2026-04-20T10:00:05Z", "from": "TechLead", "to": "QA",
-             "type": "handoff", "content": "Review spec"},
-            {"ts": "2026-04-20T10:00:10Z", "from": "QA", "to": "CPO",
-             "type": "escalation", "content": "Blocker"},
+            {
+                "ts": "2026-04-20T10:00:00Z",
+                "from": "CPO",
+                "to": "TechLead",
+                "type": "delegation",
+                "content": "Build auth",
+            },
+            {
+                "ts": "2026-04-20T10:00:05Z",
+                "from": "TechLead",
+                "to": "QA",
+                "type": "handoff",
+                "content": "Review spec",
+            },
+            {
+                "ts": "2026-04-20T10:00:10Z",
+                "from": "QA",
+                "to": "CPO",
+                "type": "escalation",
+                "content": "Blocker",
+            },
         ],
     )
     out = to_mermaid(load_trail(path))
@@ -53,8 +68,8 @@ def test_mermaid_renders_participants_and_arrows(tmp_path: Path) -> None:
     assert "participant TechLead" in out
     assert "participant QA" in out
     # Arrow mapping
-    assert "CPO ->> TechLead" in out            # delegation
-    assert "TechLead -->> QA" in out            # handoff (dashed)
+    assert "CPO ->> TechLead" in out  # delegation
+    assert "TechLead -->> QA" in out  # handoff (dashed)
     # Escalation gets an extra Note
     assert "Note over QA: escalation" in out
 
@@ -63,8 +78,13 @@ def test_mermaid_sanitizes_content(tmp_path: Path) -> None:
     path = _write_trail(
         tmp_path,
         [
-            {"ts": "t", "from": "A", "to": "B", "type": "delegation",
-             "content": "multi\nline | piped: colons"},
+            {
+                "ts": "t",
+                "from": "A",
+                "to": "B",
+                "type": "delegation",
+                "content": "multi\nline | piped: colons",
+            },
         ],
     )
     out = to_mermaid(load_trail(path))
@@ -86,10 +106,20 @@ def test_timeline_renders_one_line_per_entry(tmp_path: Path) -> None:
     path = _write_trail(
         tmp_path,
         [
-            {"ts": "2026-04-20T10:00:00Z", "from": "A", "to": "B",
-             "type": "delegation", "content": "go"},
-            {"ts": "2026-04-20T10:00:05Z", "from": "B", "to": "C",
-             "type": "handoff", "content": "over"},
+            {
+                "ts": "2026-04-20T10:00:00Z",
+                "from": "A",
+                "to": "B",
+                "type": "delegation",
+                "content": "go",
+            },
+            {
+                "ts": "2026-04-20T10:00:05Z",
+                "from": "B",
+                "to": "C",
+                "type": "handoff",
+                "content": "over",
+            },
         ],
     )
     out = to_timeline(load_trail(path))

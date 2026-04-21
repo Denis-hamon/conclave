@@ -15,15 +15,16 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - name: mypy (advisory)
-        run: mypy conclave
+      - name: mypy (strict — locked-in modules)
+        run: mypy --strict conclave/cost.py conclave/replay.py conclave/router.py conclave/trail_view.py
+      - name: mypy (advisory — whole package, non-blocking)
+        run: mypy conclave || echo "::warning::mypy baseline not clean — advisory only"
 
   test:
     runs-on: ubuntu-latest
