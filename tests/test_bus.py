@@ -68,7 +68,14 @@ def test_decision_trail_written(mock_client, tmp_path: Path):
     )
     bus.run("Goal", entry_agent="Lead")
     assert trail.exists()
-    for line in trail.read_text().splitlines():
+    lines = trail.read_text().splitlines()
+    # First line is the meta entry written by run() to enable `conclave replay`.
+    meta = json.loads(lines[0])
+    assert meta["type"] == "meta"
+    assert meta["goal"] == "Goal"
+    assert meta["entry_agent"] == "Lead"
+    # Subsequent lines are regular messages.
+    for line in lines[1:]:
         entry = json.loads(line)
         assert "from" in entry
         assert "to" in entry
@@ -95,5 +102,6 @@ def test_max_turns_stops_loop(mock_client, tmp_path: Path):
         max_turns=2,
     )
     bus.run("Goal", entry_agent="Lead")
-    # Trail captures one entry per turn
-    assert len(bus.trail) == 2
+    # Trail captures one meta entry + one message per turn.
+    assert bus.trail[0]["type"] == "meta"
+    assert len(bus.trail) == 1 + 2

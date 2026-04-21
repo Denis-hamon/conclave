@@ -608,5 +608,91 @@ def trail_view(trail_file, latest, trail_dir, fmt, title):
         click.echo(to_mermaid(entries, title=title))
 
 
+# ─── REPLAY ───────────────────────────────────────────────────────────────────
+
+
+@cli.command()
+@click.argument("trail_file", type=click.Path(exists=True, dir_okay=False), required=False)
+@click.option("--latest", is_flag=True, default=False, help="Pick the newest trail in --trail-dir.")
+@click.option("--trail-dir", default=".conclave", show_default=True)
+@click.option("--org", default="conclave.yml", show_default=True)
+@click.option(
+    "--deliberation",
+    default=None,
+    type=click.Choice(["hierarchy", "consensus", "first-valid"]),
+    help="Override the deliberation strategy from the original run.",
+)
+def replay(trail_file, latest, trail_dir, org, deliberation):
+    """Re-run a past Decision Trail, optionally with a different deliberation."""
+    from .bus import ConclaveBus
+    from .dry_run import DryRunClient
+    from .org import load_org
+    from .replay import extract_meta, infer_goal_from_trail
+    from .trail_view import latest_trail
+
+    if trail_file:
+        path = Path(trail_file)
+    elif latest:
+        picked = latest_trail(Path(trail_dir))
+        if not picked:
+            raise click.ClickException(f"No trail file found in {trail_dir}.")
+        path = picked
+    else:
+        raise click.UsageError("Pass a trail file path or --latest.")
+
+    meta = extract_meta(path)
+    if meta:
+        goal = meta.goal
+        original_delib = meta.deliberation
+        entry_from_meta = meta.entry_agent
+    else:
+        goal = infer_goal_from_trail(path) or ""
+        original_delib = "unknown"
+        entry_from_meta = ""
+
+    if not goal:
+        raise click.ClickException(
+            f"Could not extract a goal from {path}. "
+            "The trail predates the meta entry and has no user-seeded message."
+        )
+
+    # Use dry-run client — replays are expected to be safe to re-execute without
+    # burning API credit. Users who want a real replay can set ANTHROPIC_API_KEY
+    # and edit the client construction; the current signature matches `run`.
+    client = DryRunClient()
+    agents, org_name, default_delib, entry_role = load_org(org, client)
+
+    # Force native executor so DeepAgents is skipped in replay.
+    for a in agents.values():
+        a.executor = "native"
+
+    final_delib = deliberation or default_delib
+    replay_entry = entry_role or entry_from_meta
+
+    out_path = (
+        Path(trail_dir) / f"replay_of_{path.stem}_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
+    )
+
+    console.print(
+        Panel(
+            f"[bold]Replaying[/bold]  {path.name}\n"
+            f"[dim]Org:[/dim] {org_name}\n"
+            f"[dim]Goal:[/dim] {goal}\n"
+            f"[dim]Original deliberation:[/dim] {original_delib}\n"
+            f"[dim]Replay deliberation:[/dim] {final_delib}\n"
+            f"[dim]New trail:[/dim] {out_path}",
+            title="[bold cyan]◆ Conclave · Replay[/bold cyan]",
+            border_style="cyan",
+        )
+    )
+
+    ConclaveBus(
+        agents=agents,
+        deliberation=final_delib,
+        trail_path=out_path,
+        max_turns=(meta.max_turns if meta else 20),
+    ).run(goal=goal, entry_agent=replay_entry)
+
+
 if __name__ == "__main__":
     cli()

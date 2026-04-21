@@ -20,12 +20,13 @@ Define your organization in YAML. Give it a goal. Watch your agents deliberate.
 git clone https://github.com/Denis-hamon/conclave && cd conclave
 pip install -e ".[dev,dashboard]"
 
-conclave init --template product-squad          # creates conclave.yml
-conclave run "Your goal here" --dry-run          # no API key needed
-conclave trail view --latest                     # render the trail as Mermaid
-conclave dashboard                               # live control-plane UI
+conclave init --template product-squad           # creates conclave.yml
+conclave run "Your goal here" --dry-run           # no API key needed
+conclave trail view --latest                      # render the trail as Mermaid
+conclave replay --latest --deliberation consensus # same goal, different strategy
+conclave dashboard                                # live control-plane UI
 
-export ANTHROPIC_API_KEY=sk-ant-...              # then run for real
+export ANTHROPIC_API_KEY=sk-ant-...               # then run for real
 conclave run "Your goal here"
 ```
 
@@ -291,24 +292,30 @@ conclave init --template claude-code-squad  # Planner, Implementer, Reviewer, Te
 Shipped:
 
 - [x] Core agent bus + deliberation engine (`hierarchy` / `consensus` / `first-valid`)
-- [x] Decision Trail (JSONL, always on)
+- [x] Decision Trail (JSONL, always on) with meta entry for reproducibility
 - [x] YAML org definition + 5 templates (`product-squad`, `startup-5`, `growth-squad`, `creative-agency`, `claude-code-squad`)
 - [x] MCP-ready tool declarations
 - [x] Haiku ↔ Sonnet routing with classifier (+ certification loop)
 - [x] `conclave simulate` — Haiku replay on observed actions
+- [x] `conclave replay` — re-run a past trail with a different deliberation strategy
 - [x] `conclave trail view` — Mermaid / ASCII renderer
 - [x] Dashboard (FastAPI + SSE, Claude design system)
 - [x] `conclave benchmark` — 20-task cost/quality harness
 - [x] PyPI trusted publishing via OIDC
 - [x] CodeQL + Codecov + mypy advisory in CI
 
-Next:
+Next, by who owns the work:
 
-- [ ] `conclave replay` — re-run a past trail with a different deliberation strategy
-- [ ] Role marketplace (community-contributed personas)
-- [ ] Native Managed Agents multi-session API (in sync with Anthropic GA)
-- [ ] Pyodide-powered in-browser demo
+**Us — code to write:**
+- [ ] Pyodide-powered in-browser demo of the dry-run pipeline
 - [ ] Dashboard v3: React/Vite/shadcn rewrite using `dashboard-ui/DESIGN.md` as source of truth
+
+**Community — content to contribute** (open an issue with the `persona_proposal` or `deliberation_strategy` template):
+- [ ] Role marketplace — battle-tested personas and org templates beyond the five that ship
+- [ ] New deliberation strategies beyond the three built-ins
+
+**Anthropic — dependency we track:**
+- [ ] Native Managed Agents multi-session API. When this ships GA, `conclave/backends/managed_agents.py` drops its fallback and becomes the default.
 
 ---
 

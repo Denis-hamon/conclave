@@ -60,6 +60,22 @@ class ConclaveBus:
         )
         console.print()
 
+        # Meta entry: captures the run's parameters so `conclave replay` can
+        # reconstruct the invocation later. Always the first line of the trail.
+        from datetime import UTC, datetime
+
+        self.trail.append(
+            {
+                "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+                "type": "meta",
+                "goal": goal,
+                "deliberation": self.deliberation,
+                "entry_agent": entry_agent,
+                "roles": list(self.agents.keys()),
+                "max_turns": self.max_turns,
+            }
+        )
+
         # Seed message from "user" to the entry agent
         seed = Message(
             sender="user",

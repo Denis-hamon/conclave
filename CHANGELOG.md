@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **`conclave replay`** — re-run a past Decision Trail through the org, optionally with a different deliberation strategy (`--deliberation consensus`, etc.). Useful to ask "what if CPO had used consensus instead of hierarchy?" or to regression-test a persona change against a known scenario. Lands a new trail as `replay_of_<original>_<ts>.jsonl` so originals stay immutable.
+- **Trail meta entry** — every new run now writes a `{"type":"meta","goal":...,"deliberation":...,"entry_agent":...,"roles":[...]}` line as the first JSONL record. Legacy trails keep working via a best-effort `infer_goal_from_trail` fallback that picks up the first `user → entry_agent` delegation.
 - **`conclave trail view`** — render a Decision Trail as a Mermaid `sequenceDiagram` (default) or ASCII timeline. The diagram renders natively on GitHub, Notion, Obsidian, making the JSONL audit log instantly diffable and shareable. `--latest` picks the newest trail in `.conclave/` automatically.
 - **`claude-code-squad` org template** — Planner / Implementer / Reviewer / Tester, with personas written for devs using Claude Code. Available via `conclave init --template claude-code-squad` and as `examples/claude_code_squad.yml`.
 - 6 unit tests covering trail → Mermaid rendering, content sanitization, empty-trail handling, and ASCII timeline output.
