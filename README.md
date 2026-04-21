@@ -306,9 +306,20 @@ Shipped:
 
 Next, by who owns the work:
 
-**Us — code to write:**
-- [ ] Pyodide-powered in-browser demo of the dry-run pipeline
-- [ ] Dashboard v3: React/Vite/shadcn rewrite using `dashboard-ui/DESIGN.md` as source of truth
+**Us — code to write (ambitious):**
+- [ ] Pyodide-powered in-browser demo of the dry-run pipeline (~2h)
+- [ ] Dashboard v3: React/Vite/shadcn rewrite using `dashboard-ui/DESIGN.md` as source of truth (~3h)
+
+**Us — progressive tech debt cleanup:**
+- [ ] `conclave replay --real` — use a real Anthropic client instead of the dry-run default
+- [ ] Tighten `mypy` module-by-module (currently advisory, 104 baseline errors — move clean modules into the `strict = true` override in `pyproject.toml`)
+- [ ] Lift coverage on `cli.py`, `dashboard/`, `dry_run.py` (core modules already sit at 87–100%)
+
+**Release plumbing — manual GitHub / PyPI actions:**
+- [ ] Create the `pypi` GitHub environment + a Pending trusted publisher on PyPI (one-time OIDC setup for `release.yml`)
+- [ ] Add a `CODECOV_TOKEN` repo secret so the Codecov badge lights up
+- [ ] Tag `v0.1.0` and push to trigger the release workflow
+- [ ] Publish a GitHub Release with notes pulled from `CHANGELOG.md`
 
 **Community — content to contribute** (open an issue with the `persona_proposal` or `deliberation_strategy` template):
 - [ ] Role marketplace — battle-tested personas and org templates beyond the five that ship

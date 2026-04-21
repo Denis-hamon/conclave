@@ -51,17 +51,17 @@ class ModelUsage:
 class CostMeter:
     """Accumulates token usage and computes savings vs. always-Sonnet baseline."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._usage: dict[str, ModelUsage] = {}
 
-    def record(self, model: ModelTier, input_tokens: int, output_tokens: int):
+    def record(self, model: ModelTier, input_tokens: int, output_tokens: int) -> None:
         key = str(model.value) if hasattr(model, "value") else str(model)
         if key not in self._usage:
             self._usage[key] = ModelUsage(model=key)
         self._usage[key].input_tokens += input_tokens
         self._usage[key].output_tokens += output_tokens
 
-    def merge(self, other: CostMeter):
+    def merge(self, other: CostMeter) -> None:
         for key, usage in other._usage.items():
             if key not in self._usage:
                 self._usage[key] = ModelUsage(model=key)

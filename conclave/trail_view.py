@@ -32,7 +32,7 @@ class TrailEntry:
     reasoning: str = ""
 
     @classmethod
-    def from_dict(cls, d: dict) -> TrailEntry:
+    def from_dict(cls, d: dict[str, object]) -> TrailEntry:
         return cls(
             ts=str(d.get("ts", "")),
             from_role=str(d.get("from", "?")),

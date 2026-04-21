@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **`conclave replay --real`** — opt into real API calls for a replay. Default stays dry-run so no credit burns unless explicitly requested.
+- **mypy strict baseline (4 modules):** `conclave.cost`, `conclave.replay`, `conclave.router`, `conclave.trail_view` are now locked in under `strict = true` in `pyproject.toml`. Progressive adoption: additional modules join this list as they clean up.
+- **6 new unit tests** for `DryRunClient` covering response shape, classifier/evaluator routing, and kwargs tolerance. Coverage on `conclave.dry_run` moves from 0% to 82%; overall coverage from 37% to 43%.
+- **Roadmap rewritten** to split remaining work into four buckets by who owns it (us, community, Anthropic, release plumbing).
 - **`conclave replay`** — re-run a past Decision Trail through the org, optionally with a different deliberation strategy (`--deliberation consensus`, etc.). Useful to ask "what if CPO had used consensus instead of hierarchy?" or to regression-test a persona change against a known scenario. Lands a new trail as `replay_of_<original>_<ts>.jsonl` so originals stay immutable.
 - **Trail meta entry** — every new run now writes a `{"type":"meta","goal":...,"deliberation":...,"entry_agent":...,"roles":[...]}` line as the first JSONL record. Legacy trails keep working via a best-effort `infer_goal_from_trail` fallback that picks up the first `user → entry_agent` delegation.
 - **`conclave trail view`** — render a Decision Trail as a Mermaid `sequenceDiagram` (default) or ASCII timeline. The diagram renders natively on GitHub, Notion, Obsidian, making the JSONL audit log instantly diffable and shareable. `--latest` picks the newest trail in `.conclave/` automatically.

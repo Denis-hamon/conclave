@@ -101,3 +101,14 @@ check_untyped_defs = false
 # Progressive adoption: start permissive, tighten module-by-module over time.
 # CI runs mypy as an advisory signal (continue-on-error) until the baseline is
 # clean enough to gate merges on.
+
+[[tool.mypy.overrides]]
+# Modules that pass `mypy --strict` — promoted here to lock them in.
+# Add a module to this list only once it is fully strict-clean.
+module = [
+    "conclave.cost",
+    "conclave.replay",
+    "conclave.router",
+    "conclave.trail_view",
+]
+strict = true

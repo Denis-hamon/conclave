@@ -622,10 +622,15 @@ def trail_view(trail_file, latest, trail_dir, fmt, title):
     type=click.Choice(["hierarchy", "consensus", "first-valid"]),
     help="Override the deliberation strategy from the original run.",
 )
-def replay(trail_file, latest, trail_dir, org, deliberation):
+@click.option(
+    "--real",
+    is_flag=True,
+    default=False,
+    help="Use a real Anthropic client (requires ANTHROPIC_API_KEY) instead of dry-run.",
+)
+def replay(trail_file, latest, trail_dir, org, deliberation, real):
     """Re-run a past Decision Trail, optionally with a different deliberation."""
     from .bus import ConclaveBus
-    from .dry_run import DryRunClient
     from .org import load_org
     from .replay import extract_meta, infer_goal_from_trail
     from .trail_view import latest_trail
@@ -656,10 +661,14 @@ def replay(trail_file, latest, trail_dir, org, deliberation):
             "The trail predates the meta entry and has no user-seeded message."
         )
 
-    # Use dry-run client — replays are expected to be safe to re-execute without
-    # burning API credit. Users who want a real replay can set ANTHROPIC_API_KEY
-    # and edit the client construction; the current signature matches `run`.
-    client = DryRunClient()
+    if real:
+        client = _client()
+        console.print("[bold]◆ Real replay — API calls will be made.[/bold]")
+    else:
+        from .dry_run import DryRunClient
+
+        client = DryRunClient()
+        console.print("[yellow]⚠ Dry-run replay. Pass --real to hit the API.[/yellow]")
     agents, org_name, default_delib, entry_role = load_org(org, client)
 
     # Force native executor so DeepAgents is skipped in replay.

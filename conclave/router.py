@@ -144,7 +144,10 @@ class TaskRouter:
         )
 
         try:
-            clf = json.loads(resp.content[0].text.strip())
+            first = resp.content[0]
+            # Anthropic's Message.content is a union — only TextBlock has .text.
+            text = getattr(first, "text", "")
+            clf = json.loads(text.strip())
         except Exception:
             # Fallback to safe defaults if parsing fails
             clf = {
