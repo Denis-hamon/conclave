@@ -1,14 +1,54 @@
+```
+# Build artifacts
+build/
+dist/
+
+# Dependencies
+node_modules/
+venv/
+.venv/
 __pycache__/
+*.egg-info/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Python specific
 *.pyc
 *.pyo
-.venv/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-coverage.xml
-htmlcov/
-.conclave/
-*.egg-info/
-dist/
-build/
+*.pyd
+.Python
+*.so
+*.egg
+
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+```
